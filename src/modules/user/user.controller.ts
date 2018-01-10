@@ -2,7 +2,7 @@ import { Get, Controller } from "@nestjs/common";
 
 import { Observable } from "rxjs";
 
-import { User } from "./user.model";
+import { User } from "./user.entity";
 
 @Controller("/users")
 export class UserController {

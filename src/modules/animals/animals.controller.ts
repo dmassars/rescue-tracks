@@ -5,12 +5,12 @@ import { Observable } from "rxjs";
 import { ShelterLuvAnimal } from "../shelterluv/shelterluv.animal";
 import { ShelterLuvAPIService } from "../shelterluv/shelterluv.api.service";
 
-@Controller("/event_papers")
-export class EventPapersController {
+@Controller("/animals")
+export class AnimalsController {
     constructor(private shelterLuvApi: ShelterLuvAPIService) {}
 
-    @Get("/")
-    animals(): Observable<ShelterLuvAnimal[]> {
+    @Get("/remote")
+    remoteAnimals(): Observable<ShelterLuvAnimal[]> {
         return Observable.fromPromise(this.shelterLuvApi.visibleAnimals());
     }
 }

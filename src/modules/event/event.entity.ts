@@ -1,12 +1,33 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Column, ManyToOne, ManyToMany, JoinTable, JoinColumn } from "typeorm";
 
-import { Organization } from "../entities/organization.entity";
+import { Animal, Organization } from "../entities";
+
 
 @Entity("event")
 export class EventEntity extends AbstractEntity {
 
+    @Column({name: "start_time"})
+    startTime: Date;
+
+    @Column({name: "end_time"})
+    endTime: Date;
+
     @ManyToOne(type => Organization)
     @JoinColumn({name: "organization_id"})
     organization: Promise<Organization>;
+
+    @ManyToMany(type => Animal)
+    @JoinTable({
+        name: "event_animals",
+        joinColumn: {
+            name: "event_id",
+            referencedColumnName: "id",
+        },
+        inverseJoinColumn: {
+            name: "animal_id",
+            referencedColumnName: "id",
+        },
+    })
+    animals: Promise<Animal[]>;
 }

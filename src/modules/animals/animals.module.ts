@@ -1,12 +1,12 @@
 import { Module } from '@nestjs/common';
 
-import { EventPapersController } from './event-papers.controller';
+import { AnimalsController } from './animals.controller';
 import { ShelterLuvModule } from "../shelterluv/shelterluv.module";
 
 
 @Module({
     modules: [ShelterLuvModule],
-    controllers: [EventPapersController],
+    controllers: [AnimalsController],
     components: [],
 })
-export class EventPapersModule {}
+export class AnimalsModule {}

@@ -7,7 +7,7 @@ import { ApplicationModule } from './modules/app.module';
 
 const PORT = Number(process.env.PORT) || 9000;
 
-function configureServer(): express.Server {
+function configureServer(): express.Application {
     const server = express();
 
     server.use(bodyParser.json());

@@ -1,7 +1,8 @@
 import { Module } from "@nestjs/common";
 import { TypeOrmModule } from "@nestjs/typeorm";
 
-import { EventPapersModule } from "./event-papers/event-papers.module";
+import { EventModule } from "./event/event.module";
+import { AnimalsModule } from "./animals/animals.module";
 import { UserModule } from "./user/user.module";
 
 import { AppController } from "./app.controller";
@@ -10,7 +11,8 @@ import { AppController } from "./app.controller";
     modules: [
         TypeOrmModule.forRoot(),
 
-        EventPapersModule,
+        AnimalsModule,
+        EventModule,
         UserModule,
     ],
     controllers: [AppController],

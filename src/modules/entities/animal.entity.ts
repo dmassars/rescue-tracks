@@ -1,7 +1,8 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, ManyToOne, JoinColumn } from "typeorm";
+import { Entity, Column, ManyToOne, ManyToMany, JoinColumn } from "typeorm";
 
 import { Organization } from "./organization.entity";
+import { EventEntity } from "../event/event.entity";
 
 @Entity()
 export class Animal extends AbstractEntity {
@@ -21,4 +22,10 @@ export class Animal extends AbstractEntity {
 
     @Column({name: "photo_url"})
     photoURL: string;
+
+    @Column({name: "external_id"})
+    externalId: string;
+
+    @ManyToMany(type => EventEntity)
+    events: Promise<EventEntity[]>;
 }

@@ -15,6 +15,9 @@ export class User extends AbstractEntity {
     @Column({unique: true})
     email: string;
 
+    @Column()
+    password: string;
+
     @ManyToMany(type => Organization)
     organizations: Promise<Organization[]>
 }

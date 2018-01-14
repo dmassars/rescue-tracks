@@ -51,7 +51,7 @@ export class ShelterLuvAPIService {
     }
 
     public async visibleAnimals(): Promise<ShelterLuvAnimal[]> {
-        let response: {data: any} = await this.get("/animals?publishable=true");
+        let response: {data: any} = await this.get("/animals");
 
         return _.chain(response.data.animals)
                 .map(this.transformAnimal)

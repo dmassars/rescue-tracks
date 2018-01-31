@@ -17,7 +17,10 @@ export class EventEntity extends AbstractEntity {
     @JoinColumn({name: "organization_id"})
     organization: Promise<Organization>;
 
-    @ManyToMany(type => Animal)
+    @ManyToMany(type => Animal, animal => animal.events, {
+        cascadeInsert: true,
+        cascadeUpdate: true,
+    })
     @JoinTable({
         name: "event_animals",
         joinColumn: {

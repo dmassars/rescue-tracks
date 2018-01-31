@@ -4,6 +4,8 @@ import { Entity, Column, ManyToOne, ManyToMany, JoinColumn } from "typeorm";
 import { Organization } from "./organization.entity";
 import { EventEntity } from "../event/event.entity";
 
+import { ShelterLuvAnimal } from "../shelterluv/shelterluv.animal";
+
 @Entity()
 export class Animal extends AbstractEntity {
 
@@ -26,6 +28,30 @@ export class Animal extends AbstractEntity {
     @Column({name: "external_id"})
     externalId: string;
 
-    @ManyToMany(type => EventEntity)
+    @Column({name: "status", nullable: true})
+    _status: string;
+
+    @ManyToMany(type => EventEntity, event => event.animals)
     events: Promise<EventEntity[]>;
+
+    // Non-persisted fields
+    selected: boolean;
+
+    static async fromShelterLuvAnimal(shelterLuvAnimal: ShelterLuvAnimal, update = false): Promise<Animal> {
+        let animal: Animal = await Animal.findOne({externalId: shelterLuvAnimal.data["Internal-ID"]});
+
+        if(!animal) {
+            animal = new Animal();
+            animal.externalId = shelterLuvAnimal.data["Internal-ID"];
+        }
+
+        if (!animal.id || update) {
+            animal.species  = "dog";
+            animal.breed    = shelterLuvAnimal.breed;
+            animal.name     = shelterLuvAnimal.name;
+            animal.photoURL = shelterLuvAnimal.photo;
+        }
+
+        return animal;
+    }
 }

@@ -1,7 +1,7 @@
 import { Component } from '@nestjs/common';
 
 import * as _ from "lodash";
-import axios from "axios";
+import * as superagent from "superagent";
 
 import { ShelterLuvAnimal } from "./shelterluv.animal";
 
@@ -12,11 +12,8 @@ const API_KEY  = "a30bab0f-4707-4d9b-b751-9f0ed605da58";
 export class ShelterLuvAPIService {
 
     private async get(route: String): Promise<any> {
-        return axios.get(`${BASE_URL}${route}`, {
-            headers: {
-                "X-API-Key": API_KEY
-            }
-        });
+        return superagent.get(`${BASE_URL}${route}`)
+            .set("X-API-Key", API_KEY);
     }
 
     private transformAnimal(animal: any): ShelterLuvAnimal {
@@ -51,9 +48,9 @@ export class ShelterLuvAPIService {
     }
 
     public async visibleAnimals(): Promise<ShelterLuvAnimal[]> {
-        let response: {data: any} = await this.get("/animals");
+        let response: {body: {animals: any[]}} = await this.get("/animals");
 
-        return _.chain(response.data.animals)
+        return _.chain(response.body.animals)
                 .map(this.transformAnimal)
                 .reject((animal: ShelterLuvAnimal) =>
                     _.includes(
@@ -62,6 +59,15 @@ export class ShelterLuvAPIService {
                     )
                 ).sortBy("name")
                 .value();
+    }
+
+    public async getAnimalsByIds(ids: number[]): Promise<ShelterLuvAnimal[]> {
+        return Promise.all(_.map(ids, (id) => this.get(`/animals/${id}`)))
+                      .then((responses) => _.chain(responses)
+                          .filter("ok")
+                          .map("body")
+                          .map(this.transformAnimal)
+                          .value());
     }
 
 }

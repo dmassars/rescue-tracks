@@ -22,8 +22,8 @@ export class MeetingController {
                 .innerJoinAndSelect("ea.adopter", "adopter")
                 .leftJoinAndSelect("meetings.animal", "animal")
                 .where("ea.id = :eventAttendanceId", {eventAttendanceId})
+                .andWhere("meetings.active = true")
                 .andWhere("ea.concludedAt IS NULL")
-                .andWhere("meetings.active = true OR meetings.id IS NULL")
                 .getOne()
         );
     }
@@ -64,12 +64,66 @@ export class MeetingController {
         );
     }
 
-    @Post(":id/end")
-    endCurrentMeetingForAdopter(@Param("id") eventAttendanceId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<Meeting> {
+    @Post(":id/end_animal_meeting")
+    endCurrentAnimalMeetingForAdopter(@Param("id") eventAttendanceId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<Meeting> {
         return Observable.fromPromise(
             Meeting.findOne({attender: eventAttendanceId, _active: true} as any)
             .then((meeting) => meeting.end())
         );
     }
+
+    @Post(":id/adopt")
+    adoptAnimalToAdopter(@Param("id") eventAttendanceId: number): Observable<{success: boolean, error?: string}> {
+        return Observable.fromPromise(
+            EventAttendance.createQueryBuilder("ea")
+                .where("ea.id = :eventAttendanceId", {eventAttendanceId})
+                .innerJoinAndSelect("ea.meetings", "meetings")
+                .innerJoinAndSelect("meetings.animal", "animals")
+                .where("meetings.active = true")
+                .andWhere("ea.concludedAt IS NULL")
+                .getOne().then(eventAttendance => {
+                    if(!eventAttendance) {
+                        return {
+                            success: false,
+                            error: "Could not find animal for meeting",
+                        };
+                    }
+                    return EventAttendance.updateById(eventAttendanceId, {concludedAt: new Date()})
+                        .then(() => {
+                            return {
+                                success: true,
+                            };
+                        });
+                })
+        );
+    }
+
+    @Post(":id/end")
+    endMeetingWithAdopter(@Param("id") eventAttendanceId: number): Observable<{success: boolean, error?: string}> {
+        return Observable.fromPromise(
+            EventAttendance.createQueryBuilder("ea")
+                .where("ea.id = :eventAttendanceId", {eventAttendanceId})
+                .innerJoin("ea.meetings", "meetings")
+                .where("meetings.active = true")
+                .andWhere("ea.concludedAt IS NULL")
+                .getOne().then((eventAttendance) => {
+                    if(eventAttendance) {
+                        return {
+                            success: false,
+                            error: "Adopter still has a meeting going!",
+                        };
+                    }
+
+                    return EventAttendance.updateById(eventAttendanceId, {concludedAt: new Date()})
+                        .then(() => {
+                            return {
+                                success: true,
+                            };
+                        });
+                })
+        );
+    }
 }
+
+
 

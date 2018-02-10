@@ -6,6 +6,7 @@ import { EventAttendance } from "./event-attendance.entity";
 
 @Entity()
 @Index(["animal", "_active"], {unique: true})
+@Index(["attender", "_active"], {unique: true})
 export class Meeting extends AbstractEntity {
 
     @Column({name: "concluded_at", nullable: true})

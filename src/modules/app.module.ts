@@ -6,6 +6,7 @@ import { EventModule } from "./event/event.module";
 import { MeetingModule } from "./meeting/meeting.module";
 import { UserModule } from "./user/user.module";
 
+import { AppController } from "./app.controller";
 import { EventController } from "./event/event.controller";
 import { MeetingController } from "./meeting/meeting.controller";
 
@@ -24,7 +25,7 @@ import { AuthenticationService } from "./user/authentication.service";
         MeetingModule,
         UserModule,
     ],
-    controllers: [],
+    controllers: [AppController],
     components: [AuthenticationService],
 })
 export class ApplicationModule implements NestModule {

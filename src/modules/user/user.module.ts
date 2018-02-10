@@ -5,7 +5,6 @@ import { UserController } from "./user.controller";
 import { AuthenticationService } from "./authentication.service";
 
 @Module({
-    // modules: [ShelterLuvModule],
     controllers: [UserController],
     components: [AuthenticationService],
 })

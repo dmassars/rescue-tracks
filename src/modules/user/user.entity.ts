@@ -1,7 +1,8 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, ManyToMany } from "typeorm";
+import { Entity, Column, ManyToMany, OneToMany } from "typeorm";
 
-import { Organization } from "../entities/organization.entity";
+import { EventAttendance } from "../entities";
+import { Organization } from '../entities/organization.entity';
 
 @Entity("users")
 export class User extends AbstractEntity {
@@ -15,9 +16,12 @@ export class User extends AbstractEntity {
     @Column({unique: true})
     email: string;
 
-    @Column()
+    @Column() // {select: false}
     password: string;
 
-    @ManyToMany(type => Organization)
-    organizations: Promise<Organization[]>
+    @ManyToMany(type => Organization, organization => organization.members)
+    organizations: Promise<Organization[]>;
+
+    @OneToMany(type => EventAttendance, counseling => counseling.adoptionCounselor)
+    counselings: Promise<EventAttendance[]>;
 }

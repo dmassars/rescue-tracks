@@ -1,8 +1,16 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, ManyToOne, ManyToMany, JoinTable, JoinColumn } from "typeorm";
+import {
+    Entity,
+    Column,
+    ManyToOne,
+    ManyToMany,
+    JoinTable,
+    JoinColumn,
+    OneToMany
+} from "typeorm";
 
-import { Animal, Organization } from "../entities";
-
+import { Animal, EventAttendance } from "../entities";
+import { Organization } from '../entities/organization.entity';
 
 @Entity("event")
 export class EventEntity extends AbstractEntity {
@@ -13,7 +21,7 @@ export class EventEntity extends AbstractEntity {
     @Column({name: "end_time"})
     endTime: Date;
 
-    @ManyToOne(type => Organization)
+    @ManyToOne(type => Organization, organization => organization.events)
     @JoinColumn({name: "organization_id"})
     organization: Promise<Organization>;
 
@@ -33,4 +41,7 @@ export class EventEntity extends AbstractEntity {
         },
     })
     animals: Promise<Animal[]>;
+
+    @OneToMany(type => EventAttendance, eventAttendance => eventAttendance.event)
+    eventAttendance: Promise<EventAttendance[]>;
 }

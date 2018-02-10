@@ -5,21 +5,19 @@
    "username": "postgres",
    "password": "postgres",
    "database": "rescue_tracks",
-   "synchronize": true,
    "logging": false,
    "entities": [
-      "dist/modules/**/*.entity.js",
-      "src/modules/**/*.entity.ts"
+      "dist/modules/**/*.entity.js"
    ],
    "migrations": [
-      "dist/modules/**/migrations/*.js"
+      "dist/migrations/*.js"
    ],
    "subscribers": [
       "dist/modules/**/*.subscriber.js"
    ],
    "cli": {
       "entitiesDir": "src/entity",
-      "migrationsDir": "src/migration",
+      "migrationsDir": "src/migrations",
       "subscribersDir": "src/subscriber"
    }
 }

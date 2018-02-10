@@ -23,7 +23,9 @@ if(process.env.NODE_ENV == "production") {
       url: process.env.DATABASE_URL
    });
 } else {
-   base_configs.entities.push("src/modules/**/*.entity.ts");
+   if (!process.env.MIGRATE) {
+      base_configs.entities.push("src/modules/**/*.entity.ts");
+   }
 
    base_configs = Object.assign(base_configs, {
       host: "localhost",

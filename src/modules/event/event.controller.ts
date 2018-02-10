@@ -125,4 +125,19 @@ export class EventController {
             })
         );
     }
+
+    @Get(":id/meetings")
+    getMeetingsAtEvent(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<EventAttendance[]> {
+        return Observable.fromPromise(
+            EventAttendance.createQueryBuilder("ea")
+                .innerJoinAndSelect("ea.adopter", "adopter")
+                .leftJoinAndSelect("ea.meetings", "meetings", "meetings.active = true")
+                .leftJoinAndSelect("meetings.animal", "animal")
+                .where("ea.event_id = :eventId", {eventId})
+                .andWhere("ea.adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
+                .andWhere("ea.concluded_at IS NULL")
+                .orderBy("ea.created_at", "DESC")
+                .getMany()
+        );
+    }
 }

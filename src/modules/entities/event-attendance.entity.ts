@@ -11,6 +11,9 @@ import { User } from "../user/user.entity";
 @Index(["event", "adopter"], {unique: true})
 export class EventAttendance extends AbstractEntity {
 
+    @Column({name: "concluded_at", nullable: true})
+    concludedAt: Date;
+
     @ManyToOne(type => Organization)
     @JoinColumn({name: "organization_id"})
     organization: Promise<Organization>;

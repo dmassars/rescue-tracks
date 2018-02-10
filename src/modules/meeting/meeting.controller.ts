@@ -13,8 +13,23 @@ import { Adopter, Animal, EventAttendance, Meeting } from "../entities";
 export class MeetingController {
     constructor(private animalsService: AnimalsService) { }
 
-    @Get(":id") // Important - ID here is actually for the eventAttendance
+    @Get(":id")
     getMeeting(@Param("id") eventAttendanceId: number): Observable<EventAttendance> {
+        return Observable.fromPromise(
+            EventAttendance.createQueryBuilder("ea")
+                .innerJoin("ea.event", "event")
+                .leftJoin("ea.meetings", "meetings")
+                .innerJoinAndSelect("ea.adopter", "adopter")
+                .leftJoinAndSelect("meetings.animal", "animal")
+                .where("ea.id = :eventAttendanceId", {eventAttendanceId})
+                .andWhere("ea.concludedAt IS NULL")
+                .andWhere("meetings.active = true OR meetings.id IS NULL")
+                .getOne()
+        );
+    }
+
+    @Get(":id/details") // Important - ID here is actually for the eventAttendance
+    getFullDetails(@Param("id") eventAttendanceId: number): Observable<EventAttendance> {
         return Observable.fromPromise(
             EventAttendance.createQueryBuilder("ea")
                 .innerJoinAndSelect("ea.event", "event")
@@ -46,6 +61,14 @@ export class MeetingController {
                         animal: animalId,
                     } as any)
                 )
+        );
+    }
+
+    @Post(":id/end")
+    endCurrentMeetingForAdopter(@Param("id") eventAttendanceId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<Meeting> {
+        return Observable.fromPromise(
+            Meeting.findOne({attender: eventAttendanceId, _active: true} as any)
+            .then((meeting) => meeting.end())
         );
     }
 }

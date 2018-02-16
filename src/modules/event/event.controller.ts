@@ -4,16 +4,19 @@ import { Observable } from "rxjs";
 import * as _ from "lodash";
 import * as moment from "moment";
 
+import { EventSocket } from "./event.socket";
+import { EventService } from "./event.service";
+
 import { AnimalsService } from "../animals/animals.service";
 
 import { EventEntity } from "./event.entity";
 import { User } from "../user/user.entity";
-import { Adopter, Animal, EventAttendance } from "../entities";
+import { Adopter, Animal, PersonMeeting } from "../entities";
 
 @Controller("/events")
 export class EventController {
 
-    constructor(private animalsService: AnimalsService) { }
+    constructor(private animalsService: AnimalsService, private eventSocket: EventSocket, private eventService: EventService) { }
 
     @Get("/")
     getEvents(): Observable<EventEntity[]> {
@@ -71,53 +74,46 @@ export class EventController {
     }
 
     @Get(":id/attendance")
-    getEventAttendance(@Param("id") eventId: number): Observable<Adopter[]> {
+    getPersonMeeting(@Param("id") eventId: number): Observable<Adopter[]> {
         return Observable.fromPromise(
-            EventAttendance.createQueryBuilder("event_attendance")
-                .innerJoinAndSelect("event_attendance.adopter", "adopter")
-                .where("event_attendance.adoption_counselor_id IS NULL")
-                .andWhere("event_attendance.event_id = :eventId", {eventId})
-                .orderBy("event_attendance.created_at", "ASC")
-                .getMany()
-                .then(attendance => Promise.all<Adopter>(
-                    _.map(attendance, "adopter")
-                ))
+            this.eventService.getAdoptersWaitingAtEvent(eventId)
         );
     }
 
     @Post(":id/attendance")
-    async addAttendeeToEvent(@Param("id") eventId: number, @Body("attendee") attendee: Adopter): Promise<Adopter> {
+    async addAttendeeToEvent(@Param("id") eventId: number, @Body("attendee") attendee: Adopter): Promise<void> {
         let [event, adopter] = await Promise.all([
-                EventEntity.findOneById(eventId, {relations: ["eventAttendance"]}),
+                EventEntity.findOneById(eventId, {relations: ["personMeeting"]}),
                 Adopter.findOne({email: attendee.email})
             ]);
-        let attendance = await event.eventAttendance;
+        let meetings = await event.personMeeting;
 
         if(!adopter) {
             adopter = await Object.assign(new Adopter(), attendee).save();
         }
 
-        let newAttendance = Object.assign(new EventAttendance(), {adopter});
+        let newPersonMeeting = Object.assign(new PersonMeeting(), {adopter, event});
 
-        attendance.push(newAttendance);
+        meetings.push(newPersonMeeting);
 
-        event.save();
-        newAttendance.save();
+        newPersonMeeting.save()
+            .then(() => event.save())
+            .then(() => this.eventSocket.updateAdoptersAtEvent(eventId));
 
-        return adopter;
     }
 
     @Put(":id/attendance")
-    assignAdoptionCounselor(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User, @Body("attendee") attendee: Adopter): Observable<EventAttendance> {
+    assignAdoptionCounselor(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User, @Body("attendee") attendee: Adopter): Observable<PersonMeeting> {
         return Observable.fromPromise(
-            EventAttendance.createQueryBuilder()
+            PersonMeeting.createQueryBuilder()
                 .update()
                 .where("event_id = :eventId", {eventId})
                 .andWhere("adopter_id = :adopterId", {adopterId: attendee.id})
                 .set({adoptionCounselor: adoptionCounselor.id})
                 .execute()
             .then(() => {
-                return EventAttendance.createQueryBuilder()
+                this.eventSocket.updateAdoptersAtEvent(eventId);
+                return PersonMeeting.createQueryBuilder()
                     .where("event_id = :eventId", {eventId})
                     .andWhere("adopter_id = :adopterId", {adopterId: attendee.id})
                     .andWhere("adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
@@ -127,16 +123,16 @@ export class EventController {
     }
 
     @Get(":id/meetings")
-    getMeetingsAtEvent(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<EventAttendance[]> {
+    getMeetingsAtEvent(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<PersonMeeting[]> {
         return Observable.fromPromise(
-            EventAttendance.createQueryBuilder("ea")
-                .innerJoinAndSelect("ea.adopter", "adopter")
-                .leftJoinAndSelect("ea.meetings", "meetings", "meetings.active = true")
-                .leftJoinAndSelect("meetings.animal", "animal")
-                .where("ea.event_id = :eventId", {eventId})
-                .andWhere("ea.adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
-                .andWhere("ea.concluded_at IS NULL")
-                .orderBy("ea.created_at", "DESC")
+            PersonMeeting.createQueryBuilder("person_meeting")
+                .innerJoinAndSelect("person_meeting.adopter", "adopter")
+                .leftJoinAndSelect("person_meeting.animalMeetings", "animalMeetings", "animalMeetings.active = true")
+                .leftJoinAndSelect("animalMeetings.animal", "animal")
+                .where("person_meeting.event_id = :eventId", {eventId})
+                .andWhere("person_meeting.adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
+                .andWhere("person_meeting.concluded_at IS NULL")
+                .orderBy("person_meeting.created_at", "DESC")
                 .getMany()
         );
     }

@@ -1,6 +1,10 @@
-import { Module } from '@nestjs/common';
+import { Module } from "@nestjs/common";
 
-import { EventController } from './event.controller';
+import { EventController } from "./event.controller";
+
+import { EventSocket } from "./event.socket";
+
+import { EventService } from "./event.service";
 
 import { AnimalsModule } from "../animals/animals.module";
 
@@ -9,6 +13,9 @@ import { AnimalsModule } from "../animals/animals.module";
         AnimalsModule,
     ],
     controllers: [EventController],
-    components: [],
+    components: [
+        EventService,
+        EventSocket,
+    ],
 })
 export class EventModule {}

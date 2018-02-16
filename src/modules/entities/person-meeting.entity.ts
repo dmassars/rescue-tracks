@@ -4,12 +4,12 @@ import { Entity, Column, ManyToOne, ManyToMany, JoinColumn, OneToMany, Index } f
 import { Organization } from "./organization.entity";
 import { EventEntity } from "../event/event.entity";
 import { Adopter } from "./adopter.entity";
-import { Meeting } from "./meeting.entity";
+import { AnimalMeeting } from "./animal-meeting.entity";
 import { User } from "../user/user.entity";
 
 @Entity()
 @Index(["event", "adopter"], {unique: true})
-export class EventAttendance extends AbstractEntity {
+export class PersonMeeting extends AbstractEntity {
 
     @Column({name: "concluded_at", nullable: true})
     concludedAt: Date;
@@ -30,6 +30,6 @@ export class EventAttendance extends AbstractEntity {
     @JoinColumn({name: "adoption_counselor_id"})
     adoptionCounselor: Promise<User>;
 
-    @OneToMany(type => Meeting, meeting => meeting.attender)
-    meetings: Promise<Meeting[]>;
+    @OneToMany(type => AnimalMeeting, meeting => meeting.personMeeting)
+    animalMeetings: Promise<AnimalMeeting[]>;
 }

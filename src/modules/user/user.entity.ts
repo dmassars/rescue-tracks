@@ -1,7 +1,7 @@
 import { AbstractEntity } from "../abstract-entity";
 import { Entity, Column, ManyToMany, OneToMany } from "typeorm";
 
-import { EventAttendance } from "../entities";
+import { PersonMeeting } from "../entities";
 import { Organization } from '../entities/organization.entity';
 
 @Entity("users")
@@ -22,6 +22,6 @@ export class User extends AbstractEntity {
     @ManyToMany(type => Organization, organization => organization.members)
     organizations: Promise<Organization[]>;
 
-    @OneToMany(type => EventAttendance, counseling => counseling.adoptionCounselor)
-    counselings: Promise<EventAttendance[]>;
+    @OneToMany(type => PersonMeeting, counseling => counseling.adoptionCounselor)
+    counselings: Promise<PersonMeeting[]>;
 }

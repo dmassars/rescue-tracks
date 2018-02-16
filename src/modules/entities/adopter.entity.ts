@@ -3,7 +3,7 @@ import { Entity, Column, JoinColumn, ManyToOne, OneToMany } from "typeorm";
 
 import { Organization } from "./organization.entity";
 import { EventEntity } from "../event/event.entity";
-import { EventAttendance } from "./event-attendance.entity";
+import { PersonMeeting } from "./person-meeting.entity";
 
 @Entity()
 export class Adopter extends AbstractEntity {
@@ -30,6 +30,6 @@ export class Adopter extends AbstractEntity {
     @Column({name: "external_id", nullable: true})
     externalId: string;
 
-    @OneToMany(type => EventAttendance, attendance => attendance.adopter)
-    attendances: Promise<EventAttendance[]>;
+    @OneToMany(type => PersonMeeting, personMeeting => personMeeting.adopter)
+    personMeetings: Promise<PersonMeeting[]>;
 }

@@ -9,7 +9,7 @@ import {
     OneToMany
 } from "typeorm";
 
-import { Animal, EventAttendance } from "../entities";
+import { Animal, PersonMeeting } from "../entities";
 import { Organization } from '../entities/organization.entity';
 
 @Entity("event")
@@ -42,6 +42,6 @@ export class EventEntity extends AbstractEntity {
     })
     animals: Promise<Animal[]>;
 
-    @OneToMany(type => EventAttendance, eventAttendance => eventAttendance.event)
-    eventAttendance: Promise<EventAttendance[]>;
+    @OneToMany(type => PersonMeeting, eventAttendance => eventAttendance.event)
+    personMeeting: Promise<PersonMeeting[]>;
 }

@@ -3,7 +3,7 @@ import { Entity, Column, ManyToOne, ManyToMany, JoinColumn, OneToMany } from "ty
 
 import { Organization } from "./organization.entity";
 import { EventEntity } from "../event/event.entity";
-import { Meeting } from "./meeting.entity";
+import { AnimalMeeting } from "./animal-meeting.entity";
 
 import { ShelterLuvAnimal } from "../shelterluv/shelterluv.animal";
 
@@ -35,8 +35,8 @@ export class Animal extends AbstractEntity {
     @ManyToMany(type => EventEntity, event => event.animals)
     events: Promise<EventEntity[]>;
 
-    @OneToMany(type => Meeting, meeting => meeting.animal)
-    meetings: Promise<Meeting[]>;
+    @OneToMany(type => AnimalMeeting, meeting => meeting.animal)
+    animalMeetings: Promise<AnimalMeeting[]>;
 
     // Non-persisted fields
     selected: boolean;

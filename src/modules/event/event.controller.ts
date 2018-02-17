@@ -73,6 +73,13 @@ export class EventController {
                 .value();
     }
 
+    @Get(":id/animals-for-meeting")
+    getAnimalsForMeetings(@Param("id") eventId: number): Observable<Animal[]> {
+        return Observable.fromPromise(
+            this.eventService.getAnimalsAtEvent(eventId)
+        );
+    }
+
     @Get(":id/attendance")
     getPersonMeeting(@Param("id") eventId: number): Observable<Adopter[]> {
         return Observable.fromPromise(
@@ -127,8 +134,8 @@ export class EventController {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
                 .innerJoinAndSelect("person_meeting.adopter", "adopter")
-                .leftJoinAndSelect("person_meeting.animalMeetings", "animalMeetings", "animalMeetings.active = true")
-                .leftJoinAndSelect("animalMeetings.animal", "animal")
+                .leftJoinAndSelect("person_meeting.animalMeetings", "animal_meetings", "animal_meetings.active = true")
+                .leftJoinAndSelect("animal_meetings.animal", "animal")
                 .where("person_meeting.event_id = :eventId", {eventId})
                 .andWhere("person_meeting.adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
                 .andWhere("person_meeting.concluded_at IS NULL")

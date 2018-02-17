@@ -40,13 +40,10 @@ export class EventSocket implements OnGatewayConnection {
         //     return;
         // }
 
-        // setTimeout(() => {
-        //     actionMapping[action]().then((result) => {
-        //         debugger;
-        //         socket.server.of("/event").to(socket.client.id).emit(action, result)
-        //     });
-        // })
-
+        // actionMapping[action]().then((result) => {
+        //     debugger;
+        //     this.server.to(socket.client.id).emit(action, result);
+        // });
     }
 
     updateAdoptersAtEvent(eventId: number): void {

@@ -17,5 +17,9 @@ import { AnimalsModule } from "../animals/animals.module";
         EventService,
         EventSocket,
     ],
+    exports: [
+        EventService,
+        EventSocket,
+    ],
 })
 export class EventModule {}

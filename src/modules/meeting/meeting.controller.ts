@@ -5,13 +5,14 @@ import * as _ from "lodash";
 import * as moment from "moment";
 
 import { AnimalsService } from "../animals/animals.service";
+import { EventSocket } from "../event/event.socket";
 
 import { User } from "../user/user.entity";
 import { Adopter, Animal, PersonMeeting, AnimalMeeting } from "../entities";
 
 @Controller("/meetings")
 export class MeetingController {
-    constructor(private animalsService: AnimalsService) { }
+    constructor(private animalsService: AnimalsService, private eventSocket: EventSocket) { }
 
     @Get(":id")
     getMeeting(@Param("id") personMeetingId: number): Observable<PersonMeeting> {
@@ -35,13 +36,7 @@ export class MeetingController {
                 .innerJoinAndSelect("person_meeting.event", "event")
                 .innerJoinAndSelect("person_meeting.adopter", "adopter")
                 .innerJoinAndSelect("person_meeting.adoptionCounselor", "adoptionCounselor")
-                .innerJoinAndSelect("event.animals", "animals")
-                .leftJoinAndSelect("animals.animalMeetings", "animal_meetings", "animal_meetings.active = true")
-                .leftJoinAndSelect("animal_meetings.personMeeting", "person_meetings")
-                .leftJoinAndSelect("person_meetings.adoptionCounselor", "otherAdoptionCounselors")
-                .leftJoinAndSelect("person_meetings.adopter", "otherAdopters")
                 .where("person_meeting.id = :personMeetingId", {personMeetingId})
-                .orderBy("animals.name", "ASC")
                 .getOne()
         );
     }
@@ -52,23 +47,33 @@ export class MeetingController {
             AnimalMeeting.createQueryBuilder()
                 .insert()
                 .values({
-                    attender: personMeetingId,
+                    personMeeting: personMeetingId,
                     animal: animalId,
                 } as any)
-                .execute().then(() =>
-                    AnimalMeeting.findOne({
-                        _active: true,
+                .execute().then(() => {
+                    PersonMeeting.findOneById(personMeetingId, {relations: ["event"]}).then((meeting) =>
+                        this.eventSocket.updateAnimalsAtEvent((meeting as any).__event__.id)
+                    );
+                    return AnimalMeeting.findOne({
+                        active: true,
                         animal: animalId,
                     } as any)
-                )
+                })
         );
     }
 
     @Post(":id/end_animal_meeting")
     endCurrentAnimalMeetingForAdopter(@Param("id") personMeetingId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<AnimalMeeting> {
         return Observable.fromPromise(
-            AnimalMeeting.findOne({attender: personMeetingId, _active: true} as any)
+            AnimalMeeting.findOne({personMeeting: personMeetingId, active: true} as any)
             .then((meeting) => meeting.end())
+            .then((meeting) => {
+                PersonMeeting.findOneById(personMeetingId, {relations: ["event"]}).then((meeting) =>
+                    this.eventSocket.updateAnimalsAtEvent((meeting as any).__event__.id)
+                );
+
+                return meeting;
+            })
         );
     }
 
@@ -81,13 +86,16 @@ export class MeetingController {
                 .innerJoinAndSelect("animal_meetings.animal", "animals")
                 .where("animal_meetings.active = true")
                 .andWhere("person_meeting.concludedAt IS NULL")
-                .getOne().then(eventAttendance => {
-                    if(!eventAttendance) {
+                .getOne().then(personMeeting => {
+                    if(!personMeeting) {
                         return {
                             success: false,
                             error: "Could not find animal for meeting",
                         };
                     }
+                    personMeeting.event.then((event) =>
+                        this.eventSocket.updateAnimalsAtEvent(event.id)
+                    );
                     return PersonMeeting.updateById(personMeetingId, {concludedAt: new Date()})
                         .then(() => {
                             return {
@@ -106,14 +114,13 @@ export class MeetingController {
                 .innerJoin("person_meeting.animalMeetings", "animal_meetings")
                 .where("animal_meetings.active = true")
                 .andWhere("person_meeting.concludedAt IS NULL")
-                .getOne().then((eventAttendance) => {
-                    if(eventAttendance) {
+                .getOne().then((personMeeting) => {
+                    if(personMeeting) {
                         return {
                             success: false,
                             error: "Adopter still has a meeting going!",
                         };
                     }
-
                     return PersonMeeting.updateById(personMeetingId, {concludedAt: new Date()})
                         .then(() => {
                             return {

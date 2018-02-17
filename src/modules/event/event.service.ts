@@ -27,7 +27,7 @@ export class EventService {
 
     getAnimalsAtEvent(eventId: number): Promise<Animal[]> {
         return Animal.createQueryBuilder("animals")
-            .innerJoin("animals.event", "events")
+            .innerJoin("animals.events", "events")
             .leftJoinAndSelect("animals.animalMeetings", "animal_meetings", "animal_meetings.active = true")
             .leftJoinAndSelect("animal_meetings.personMeeting", "person_meetings")
             .leftJoinAndSelect("person_meetings.adoptionCounselor", "otherAdoptionCounselors")

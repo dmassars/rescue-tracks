@@ -12,7 +12,7 @@ export class AnimalMeeting extends AbstractEntity {
     @Column({name: "concluded_at", nullable: true})
     concludedAt: Date;
 
-    @Column({name: "active", nullable: true, select: false, default: true})
+    @Column({nullable: true, select: false, default: true})
     active: boolean;
 
     @ManyToOne(type => Animal, animal => animal.animalMeetings)

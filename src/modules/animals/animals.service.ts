@@ -25,7 +25,7 @@ export class AnimalsService {
             _.map(
                 animals,
                 (animal: ShelterLuvAnimal) => Animal.fromShelterLuvAnimal(animal).catch((err) => {
-                    debugger;
+                    // debugger;
                 })
             )
         );

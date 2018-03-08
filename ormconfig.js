@@ -1,7 +1,10 @@
+let SnakeCaseNamingStrategy = require("./dist/config/naming.strategy").SnakeCaseNamingStrategy;
+
 let base_configs = {
    type: "postgres",
    logging: true,
    synchronize: false,
+   namingStrategy: new SnakeCaseNamingStrategy(),
    entities: [
       "dist/modules/**/*.entity.js"
    ],
@@ -33,7 +36,7 @@ if(process.env.NODE_ENV == "production") {
       username: "postgres",
       password: "postgres",
       database: "rescue_tracks",
-      synchronize: true,
+      // synchronize: true,
    });
 }
 

@@ -9,39 +9,28 @@ import {
     OneToMany
 } from "typeorm";
 
-import { Animal, PersonMeeting } from "../entities";
+import { Animal, EventAttender } from "../entities";
 import { Organization } from '../entities/organization.entity';
 
 @Entity("event")
 export class EventEntity extends AbstractEntity {
 
-    @Column({name: "start_time"})
+    @Column()
     startTime: Date;
 
-    @Column({name: "end_time"})
+    @Column()
     endTime: Date;
 
     @ManyToOne(type => Organization, organization => organization.events)
-    @JoinColumn({name: "organization_id"})
     organization: Promise<Organization>;
 
     @ManyToMany(type => Animal, animal => animal.events, {
         cascadeInsert: true,
         cascadeUpdate: true,
     })
-    @JoinTable({
-        name: "event_animals",
-        joinColumn: {
-            name: "event_id",
-            referencedColumnName: "id",
-        },
-        inverseJoinColumn: {
-            name: "animal_id",
-            referencedColumnName: "id",
-        },
-    })
+    @JoinTable()
     animals: Promise<Animal[]>;
 
-    @OneToMany(type => PersonMeeting, eventAttendance => eventAttendance.event)
-    personMeeting: Promise<PersonMeeting[]>;
+    @OneToMany(type => EventAttender, eventAttender => eventAttender.event)
+    eventAttenders: Promise<EventAttender[]>;
 }

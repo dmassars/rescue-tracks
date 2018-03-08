@@ -2,15 +2,15 @@ import { AbstractEntity } from "../abstract-entity";
 import { Entity, Column, ManyToMany, OneToMany } from "typeorm";
 
 import { PersonMeeting } from "../entities";
-import { Organization } from '../entities/organization.entity';
+import { Membership } from "./membership.entity";
 
 @Entity("users")
 export class User extends AbstractEntity {
 
-    @Column({name: "first_name"})
+    @Column()
     firstName: string;
 
-    @Column({name: "last_name"})
+    @Column()
     lastName: string;
 
     @Column({unique: true})
@@ -19,8 +19,8 @@ export class User extends AbstractEntity {
     @Column() // {select: false}
     password: string;
 
-    @ManyToMany(type => Organization, organization => organization.members)
-    organizations: Promise<Organization[]>;
+    @ManyToMany(type => Membership, membership => membership.member)
+    memberships: Promise<Membership[]>;
 
     @OneToMany(type => PersonMeeting, counseling => counseling.adoptionCounselor)
     counselings: Promise<PersonMeeting[]>;

@@ -1,77 +1,33 @@
 import {
-    OnGatewayConnection,
+    OnGatewayInit,
     WebSocketGateway,
-    WebSocketServer,
 } from "@nestjs/websockets";
 
-import * as _ from "lodash";
 import * as socketIO from "socket.io";
 
-import { Observable, BehaviorSubject } from "rxjs";
+import { AbstractSocket } from "../abstract-socket";
 
 import { EventService } from "./event.service";
 import { Adopter } from "../entities/adopter.entity";
 import { Animal } from "../entities/animal.entity";
 
 @WebSocketGateway({namespace: "event"})
-export class EventSocket implements OnGatewayConnection {
-
-    @WebSocketServer()
-    private server: SocketIO.Server;
-
-    private adoptersAtEvent: Map<number, BehaviorSubject<Adopter[]>>;
-    private animalsAtEvent: Map<number, BehaviorSubject<Animal[]>>;
+export class EventSocket extends AbstractSocket implements OnGatewayInit {
+    private autoUpdater: <T>(identifier: number, socketEvent: string, serviceFunctionName: string) => void;
 
     constructor(private eventService: EventService) {
-        this.adoptersAtEvent = new Map<number, BehaviorSubject<Adopter[]>>();
-        this.animalsAtEvent  = new Map<number, BehaviorSubject<Animal[]>>();
+        super();
     }
 
-    handleConnection(socket: SocketIO.Socket) {
-        // let eventId = _.get(socket, "request._query.event_id");
-        // let action  = _.get(socket, "request._query.action");
-
-        // let actionMapping = {
-        //     adopters: () => this.eventService.getAdoptersWaitingAtEvent(eventId),
-        //     animals:  () => this.eventService.getAnimalsAtEvent(eventId)
-        // };
-
-        // if(!eventId || !action || !actionMapping[action]) {
-        //     return;
-        // }
-
-        // actionMapping[action]().then((result) => {
-        //     debugger;
-        //     this.server.to(socket.client.id).emit(action, result);
-        // });
+    afterInit(server: SocketIO.Server) {
+        this.autoUpdater = this.buildSocketUpdater<EventService, number>(server, this.eventService);
     }
 
     updateAdoptersAtEvent(eventId: number): void {
-        if(!this.adoptersAtEvent.has(eventId)) {
-            let eventAdopters = new BehaviorSubject<Adopter[]>([]);
-            this.adoptersAtEvent.set(eventId, eventAdopters);
-
-            eventAdopters.subscribe((adopters: Adopter[]) => this.server.emit("adopters", adopters));
-        }
-
-        this.eventService.getAdoptersWaitingAtEvent(eventId).then((adopters: Adopter[]) => {
-            this.adoptersAtEvent.get(eventId).next(adopters);
-        });
+        this.autoUpdater<Adopter[]>(eventId, "adopters", "getAdoptersWaitingAtEvent");
     }
 
     updateAnimalsAtEvent(eventId: number): void {
-        if(!this.animalsAtEvent.has(eventId)) {
-            let eventAnimals = new BehaviorSubject<Animal[]>([]);
-            this.animalsAtEvent.set(eventId, eventAnimals);
-
-            eventAnimals.subscribe((animals: Animal[]) =>
-                this.server.emit("animals", animals)
-            );
-        }
-
-        this.eventService.getAnimalsAtEvent(eventId).then((animals: Animal[]) =>
-            this.animalsAtEvent.get(eventId).next(animals)
-        );
+        this.autoUpdater<Animal[]>(eventId, "animals", "getAnimalsAtEvent");
     }
-
 }

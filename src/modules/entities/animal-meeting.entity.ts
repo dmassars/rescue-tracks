@@ -5,22 +5,20 @@ import { Animal } from "./animal.entity";
 import { PersonMeeting } from "./person-meeting.entity";
 
 @Entity()
-@Index(["animal", "active"], {unique: true})
-@Index(["personMeeting", "active"], {unique: true})
+@Index("uix_animal_meeting_on_animal_and_active", ["animal", "active"], {unique: true})
+@Index("uix_animal_meeting_on_person_meeting_and_active", ["personMeeting", "active"], {unique: true})
 export class AnimalMeeting extends AbstractEntity {
 
-    @Column({name: "concluded_at", nullable: true})
+    @Column({nullable: true})
     concludedAt: Date;
 
     @Column({nullable: true, select: false, default: true})
     active: boolean;
 
     @ManyToOne(type => Animal, animal => animal.animalMeetings)
-    @JoinColumn({name: "animal_id"})
     animal: Promise<Animal>;
 
     @ManyToOne(type => PersonMeeting, attender => attender.animalMeetings)
-    @JoinColumn({name: "person_meeting_id"})
     personMeeting: Promise<PersonMeeting>;
 
     async end(): Promise<AnimalMeeting> {

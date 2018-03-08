@@ -11,7 +11,7 @@ import { AnimalsService } from "../animals/animals.service";
 
 import { EventEntity } from "./event.entity";
 import { User } from "../user/user.entity";
-import { Adopter, Animal, PersonMeeting } from "../entities";
+import { Adopter, Animal, EventAttender, PersonMeeting } from "../entities";
 
 @Controller("/events")
 export class EventController {
@@ -81,7 +81,7 @@ export class EventController {
     }
 
     @Get(":id/attendance")
-    getPersonMeeting(@Param("id") eventId: number): Observable<Adopter[]> {
+    getPersonMeeting(@Param("id") eventId: number): Observable<EventAttender[]> {
         return Observable.fromPromise(
             this.eventService.getAdoptersWaitingAtEvent(eventId)
         );
@@ -90,41 +90,35 @@ export class EventController {
     @Post(":id/attendance")
     async addAttendeeToEvent(@Param("id") eventId: number, @Body("attendee") attendee: Adopter): Promise<void> {
         let [event, adopter] = await Promise.all([
-                EventEntity.findOneById(eventId, {relations: ["personMeeting"]}),
+                EventEntity.findOneById(eventId, {relations: ["eventAttenders"]}),
                 Adopter.findOne({email: attendee.email})
             ]);
-        let meetings = await event.personMeeting;
+        let meetings = await event.eventAttenders;
 
         if(!adopter) {
             adopter = await Object.assign(new Adopter(), attendee).save();
         }
 
-        let newPersonMeeting = Object.assign(new PersonMeeting(), {adopter, event});
+        let newEventAttender = Object.assign(new EventAttender(), {adopter, event});
 
-        meetings.push(newPersonMeeting);
+        meetings.push(newEventAttender);
 
-        newPersonMeeting.save()
+        newEventAttender.save()
             .then(() => event.save())
             .then(() => this.eventSocket.updateAdoptersAtEvent(eventId));
-
     }
 
     @Put(":id/attendance")
     assignAdoptionCounselor(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User, @Body("attendee") attendee: Adopter): Observable<PersonMeeting> {
         return Observable.fromPromise(
-            PersonMeeting.createQueryBuilder()
-                .update()
-                .where("event_id = :eventId", {eventId})
-                .andWhere("adopter_id = :adopterId", {adopterId: attendee.id})
-                .set({adoptionCounselor: adoptionCounselor.id})
-                .execute()
-            .then(() => {
-                this.eventSocket.updateAdoptersAtEvent(eventId);
-                return PersonMeeting.createQueryBuilder()
-                    .where("event_id = :eventId", {eventId})
-                    .andWhere("adopter_id = :adopterId", {adopterId: attendee.id})
-                    .andWhere("adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
-                    .getOne();
+            EventAttender.findOne({where: {event_id: eventId, adopter_id: attendee.id}})
+            .then((eventAttender: EventAttender) => {
+                let newPersonMeeting = Object.assign(new PersonMeeting, {eventAttender, adoptionCounselor});
+
+                return newPersonMeeting.save().then(() => {
+                    this.eventSocket.updateAdoptersAtEvent(eventId);
+                    return newPersonMeeting;
+                });
             })
         );
     }
@@ -133,10 +127,12 @@ export class EventController {
     getMeetingsAtEvent(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<PersonMeeting[]> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .innerJoinAndSelect("person_meeting.adopter", "adopter")
+                .innerJoin("person_meeting.eventAttender", "event_attender")
+                .innerJoinAndSelect("event_attender.adopter", "adopter")
                 .leftJoinAndSelect("person_meeting.animalMeetings", "animal_meetings", "animal_meetings.active = true")
                 .leftJoinAndSelect("animal_meetings.animal", "animal")
-                .where("person_meeting.event_id = :eventId", {eventId})
+                .where("event_attender.event_id = :eventId", {eventId})
+                .andWhere("event_attender.active")
                 .andWhere("person_meeting.adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
                 .andWhere("person_meeting.concluded_at IS NULL")
                 .orderBy("person_meeting.created_at", "DESC")

@@ -8,7 +8,7 @@ export class SecondInitialMigration1518586088446 implements MigrationInterface {
         await queryRunner.query(`CREATE TABLE "person_meeting" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "concluded_at" TIMESTAMP, "organization_id" integer, "event_id" integer, "adopter_id" integer, "adoption_counselor_id" integer, PRIMARY KEY("id"))`);
         await queryRunner.query(`CREATE TABLE "animal_meeting" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "concluded_at" TIMESTAMP, "active" boolean DEFAULT true, "animal_id" integer, "person_meeting_id" integer, PRIMARY KEY("id"))`);
         await queryRunner.query(`CREATE TABLE "animal" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "species" character varying NOT NULL, "breed" character varying NOT NULL, "name" character varying NOT NULL, "photo_url" character varying NOT NULL, "external_id" character varying NOT NULL, "status" character varying, "organization_id" integer, PRIMARY KEY("id"))`);
-        // await queryRunner.query(`CREATE TABLE "users" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "first_name" character varying NOT NULL, "last_name" character varying NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, CONSTRAINT "uk_users_email" UNIQUE ("email"), PRIMARY KEY("id"))`);
+        await queryRunner.query(`CREATE TABLE "users" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "first_name" character varying NOT NULL, "last_name" character varying NOT NULL, "email" character varying NOT NULL, "password" character varying NOT NULL, CONSTRAINT "uk_users_email" UNIQUE ("email"), PRIMARY KEY("id"))`);
         await queryRunner.query(`CREATE TABLE "organization" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "name" character varying NOT NULL, "address_id" integer, PRIMARY KEY("id"))`);
         await queryRunner.query(`CREATE TABLE "adopter" ("id" SERIAL NOT NULL, "created_at" TIMESTAMP NOT NULL DEFAULT now(), "updated_at" TIMESTAMP NOT NULL DEFAULT now(), "first_name" character varying NOT NULL, "last_name" character varying NOT NULL, "email" character varying NOT NULL, "phone_number" character varying NOT NULL, "preapproved" boolean NOT NULL DEFAULT false, "external_id" character varying, "organization_id" integer, PRIMARY KEY("id"))`);
         await queryRunner.query(`CREATE TABLE "event_animals" ("event_id" integer NOT NULL, "animal_id" integer NOT NULL, PRIMARY KEY("event_id", "animal_id"))`);
@@ -54,7 +54,7 @@ export class SecondInitialMigration1518586088446 implements MigrationInterface {
         await queryRunner.query(`DROP TABLE "event_animals"`);
         await queryRunner.query(`DROP TABLE "adopter"`);
         await queryRunner.query(`DROP TABLE "organization"`);
-        // await queryRunner.query(`DROP TABLE "users"`);
+        await queryRunner.query(`DROP TABLE "users"`);
         await queryRunner.query(`DROP TABLE "animal"`);
         await queryRunner.query(`DROP TABLE "animal_meeting"`);
         await queryRunner.query(`DROP TABLE "person_meeting"`);

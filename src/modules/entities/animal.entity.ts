@@ -11,7 +11,6 @@ import { ShelterLuvAnimal } from "../shelterluv/shelterluv.animal";
 export class Animal extends AbstractEntity {
 
     @ManyToOne(type => Organization)
-    @JoinColumn({name: "organization_id"})
     organization: Promise<Organization>;
 
     @Column()
@@ -23,14 +22,14 @@ export class Animal extends AbstractEntity {
     @Column()
     name: string;
 
-    @Column({name: "photo_url"})
+    @Column()
     photoURL: string;
 
-    @Column({name: "external_id"})
+    @Column()
     externalId: string;
 
-    @Column({name: "status", nullable: true})
-    _status: string;
+    @Column({nullable: true})
+    status: string;
 
     @ManyToMany(type => EventEntity, event => event.animals)
     events: Promise<EventEntity[]>;

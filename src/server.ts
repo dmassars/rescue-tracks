@@ -13,6 +13,14 @@ function configureServer(): express.Application {
     server.use(bodyParser.json());
     server.use(cors());
 
+    server.use((req, res, next) => {
+        res.header("access-control-expose-headers", `
+            Content-Length
+            X-JWT
+        `.trim().replace(/\s+/g, ","));
+        next();
+    })
+
     return server;
 }
 

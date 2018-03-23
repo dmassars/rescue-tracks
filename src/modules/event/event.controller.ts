@@ -11,7 +11,7 @@ import { AnimalsService } from "../animals/animals.service";
 
 import { EventEntity } from "./event.entity";
 import { User } from "../user/user.entity";
-import { Adopter, Animal, EventAttender, PersonMeeting } from "../entities";
+import { Adopter, Animal, EventAttendance, PersonMeeting } from "../entities";
 
 @Controller("/events")
 export class EventController {
@@ -81,7 +81,7 @@ export class EventController {
     }
 
     @Get(":id/attendance")
-    getPersonMeeting(@Param("id") eventId: number): Observable<EventAttender[]> {
+    getPersonMeeting(@Param("id") eventId: number): Observable<EventAttendance[]> {
         return Observable.fromPromise(
             this.eventService.getAdoptersWaitingAtEvent(eventId)
         );
@@ -90,20 +90,20 @@ export class EventController {
     @Post(":id/attendance")
     async addAttendeeToEvent(@Param("id") eventId: number, @Body("attendee") attendee: Adopter): Promise<void> {
         let [event, adopter] = await Promise.all([
-                EventEntity.findOneById(eventId, {relations: ["eventAttenders"]}),
+                EventEntity.findOneById(eventId, {relations: ["eventAttendances"]}),
                 Adopter.findOne({email: attendee.email})
             ]);
-        let meetings = await event.eventAttenders;
+        let meetings = await event.eventAttendances;
 
         if(!adopter) {
             adopter = await Object.assign(new Adopter(), attendee).save();
         }
 
-        let newEventAttender = Object.assign(new EventAttender(), {adopter, event});
+        let newEventAttendance = Object.assign(new EventAttendance(), {adopter, event});
 
-        meetings.push(newEventAttender);
+        meetings.push(newEventAttendance);
 
-        newEventAttender.save()
+        newEventAttendance.save()
             .then(() => event.save())
             .then(() => this.eventSocket.updateAdoptersAtEvent(eventId));
     }
@@ -111,9 +111,9 @@ export class EventController {
     @Put(":id/attendance")
     assignAdoptionCounselor(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User, @Body("attendee") attendee: Adopter): Observable<PersonMeeting> {
         return Observable.fromPromise(
-            EventAttender.findOne({where: {event_id: eventId, adopter_id: attendee.id}})
-            .then((eventAttender: EventAttender) => {
-                let newPersonMeeting = Object.assign(new PersonMeeting, {eventAttender, adoptionCounselor});
+            EventAttendance.findOne({where: {event_id: eventId, adopter_id: attendee.id}})
+            .then((eventAttendance: EventAttendance) => {
+                let newPersonMeeting = Object.assign(new PersonMeeting, {eventAttendance, adoptionCounselor});
 
                 return newPersonMeeting.save().then(() => {
                     this.eventSocket.updateAdoptersAtEvent(eventId);
@@ -127,7 +127,7 @@ export class EventController {
     getMeetingsAtEvent(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<PersonMeeting[]> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .innerJoin("person_meeting.eventAttender", "event_attender")
+                .innerJoin("person_meeting.eventAttendance", "event_attender")
                 .innerJoinAndSelect("event_attender.adopter", "adopter")
                 .leftJoinAndSelect("person_meeting.animalMeetings", "animal_meetings", "animal_meetings.active = true")
                 .leftJoinAndSelect("animal_meetings.animal", "animal")

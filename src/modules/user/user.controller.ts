@@ -4,8 +4,11 @@ import {
         Controller,
         Body,
         HttpException,
-        HttpStatus
+        HttpStatus,
+        Request
        } from "@nestjs/common";
+
+import * as _ from "lodash";
 
 import { User } from "./user.entity";
 
@@ -16,26 +19,22 @@ export class UserController {
     constructor(private authenticationService: AuthenticationService) { }
 
     @Post("/login")
-    async login(@Body() data: {email: string, password: string}): Promise<{token: string}> {
-        return User.findOne({email: data.email})
-            .then(user => {
-                if(!user || user.password != data.password) {
+    async login(@Request() request, @Body("email") email: string, @Body("password") password: string): Promise<{success: boolean}> {
+        return User.findOne({where: {email}, select: ["email", "password", "firstName", "lastName", "id", "createdAt"]})
+            .then((user: User) => {
+                if(!user || user.password != password) {
                     throw new HttpException("Invalid login credentials.", HttpStatus.UNAUTHORIZED);
                 }
 
-                return this.authenticationService.tokenForUser(user);
-            }).then(token => { return { token }; });
+                return this.authenticationService.setTokenInRequest(request, new User(_.omit(user, "password")));
+            }).then(token => { return { success: true }; });
     }
 
     @Post("/register")
-    async register(@Body() data: User): Promise<{token: string}> {
-        let u: User = new User();
-
-        Object.assign(u, data);
-
-        return u.save()
-            .then((user) => this.authenticationService.tokenForUser(user))
-            .then((token) => { return { token }; })
+    async register(@Request() request, @Body() data: User): Promise<{success: boolean}> {
+        return (new User(data)).save()
+            .then((user) => this.authenticationService.setTokenInRequest(request, user))
+            .then((token) => { return { success: true }; })
             .catch((error: Error) => {
                 if(/duplicate key value violates unique constraint "uk_users_email"/.test(error.message)) {
                     throw new HttpException("That email is taken", HttpStatus.UNAUTHORIZED);
@@ -43,5 +42,4 @@ export class UserController {
                 throw new HttpException(`Error registering: ${error.message}`, HttpStatus.UNAUTHORIZED);
             });
     }
-
 }

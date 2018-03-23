@@ -1,16 +1,44 @@
 import { Component } from '@nestjs/common';
 
+import { Request } from "express";
+
 import * as jwt from "jsonwebtoken";
+import * as _ from "lodash";
 
 import { User } from "./user.entity";
+import { Organization } from "../organization/organization.entity";
 
 @Component()
 export class AuthenticationService {
-    public async tokenForUser(user: User): Promise<string> {
+
+    public async setTokenInRequest(request: {res: {set: (h: string, v: string) => any}}, user: User, currentOrganization?: Organization): Promise<void> {
+        return this.tokenForUser(user, currentOrganization).then((token: string) => {
+            request.res.set("X-JWT", token);
+        });
+    }
+
+    public async tokenForUser(user: User, currentOrganization?: Organization): Promise<string> {
+        debugger;
+        if (!currentOrganization) {
+            let organizations = await Organization.createQueryBuilder("organization")
+                                                  .innerJoin("organization.memberships", "membership")
+                                                  .where("membership.member = :user", {user: user.id})
+                                                  .andWhere("membership.status = 'active'")
+                                                  .getMany();
+
+            debugger;
+
+            if (organizations.length == 1) {
+                currentOrganization = organizations[1];
+            }
+        }
+
+        debugger;
+
         return new Promise<string>((resolve, reject) => {
             jwt.sign({
                 sub: user.id,
-                data: user
+                data: Object.assign(user, {currentOrganization: currentOrganization})
             }, "this_is_not_the_secret", (error, token: string) => {
                 if(error) {
                     reject(error);
@@ -21,12 +49,12 @@ export class AuthenticationService {
         });
     }
 
-    public async userFromToken(token: string): Promise<User> {
+    public async loadFromToken(token: string): Promise<{currentUser: User, currentOrganization: Organization}> {
         let matchedToken = token.match(/Bearer (.{64,})/);
 
         if(matchedToken) {
             token = matchedToken[1];
-            return new Promise<User>((resolve, reject) => {
+            return new Promise<{currentUser: User, currentOrganization: Organization}>((resolve, reject) => {
                 jwt.verify(
                     token,
                     "this_is_not_the_secret",
@@ -34,7 +62,14 @@ export class AuthenticationService {
                         if(error) {
                             reject(error);
                         } else if(payload && payload.sub) {
-                            resolve(User.findOneById(payload.sub));
+                            let currentUser = User.findOneById(payload.sub);
+                            let orgId = _.get(payload, "data.currentOrganization.id");
+                            let currentOrganization = Promise.resolve(orgId ? Organization.findOneById(orgId) : undefined);
+
+                            Promise.all([currentUser, currentOrganization]).then(([currentUser, currentOrganization]) => {
+                                currentUser.currentOrganization = currentOrganization;
+                                resolve({currentUser, currentOrganization});
+                            });
                         } else {
                             reject("No valid token payload");
                         }

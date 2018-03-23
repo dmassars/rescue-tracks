@@ -1,7 +1,7 @@
 import { AbstractEntity } from "../abstract-entity";
 import { Entity, Column, ManyToOne, ManyToMany, JoinColumn, OneToMany } from "typeorm";
 
-import { Organization } from "./organization.entity";
+import { Organization } from "../organization/organization.entity";
 import { EventEntity } from "../event/event.entity";
 import { AnimalMeeting } from "./animal-meeting.entity";
 

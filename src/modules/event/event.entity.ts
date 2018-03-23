@@ -9,8 +9,9 @@ import {
     OneToMany
 } from "typeorm";
 
-import { Animal, EventAttender } from "../entities";
-import { Organization } from '../entities/organization.entity';
+import { Animal, EventAttendance } from "../entities";
+import { Organization } from "../organization/organization.entity";
+import { EventPersonnel } from "./event-personnel.entity";
 
 @Entity("event")
 export class EventEntity extends AbstractEntity {
@@ -31,6 +32,9 @@ export class EventEntity extends AbstractEntity {
     @JoinTable()
     animals: Promise<Animal[]>;
 
-    @OneToMany(type => EventAttender, eventAttender => eventAttender.event)
-    eventAttenders: Promise<EventAttender[]>;
+    @OneToMany(type => EventPersonnel, "event")
+    eventPersonnel: Promise<EventPersonnel[]>;
+
+    @OneToMany(type => EventAttendance, "event")
+    eventAttendances: Promise<EventAttendance[]>;
 }

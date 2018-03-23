@@ -5,6 +5,7 @@ import { UserController } from "./user.controller";
 import { AuthenticationService } from "./authentication.service";
 
 @Module({
+    exports: [AuthenticationService],
     controllers: [UserController],
     components: [AuthenticationService],
 })

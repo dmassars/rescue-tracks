@@ -4,11 +4,13 @@ import { TypeOrmModule } from "@nestjs/typeorm";
 import { AnimalsModule } from "./animals/animals.module";
 import { EventModule } from "./event/event.module";
 import { MeetingModule } from "./meeting/meeting.module";
+import { OrganizationModule } from "./organization/organization.module";
 import { UserModule } from "./user/user.module";
 
 import { AppController } from "./app.controller";
 import { EventController } from "./event/event.controller";
 import { MeetingController } from "./meeting/meeting.controller";
+import { OrganizationController } from "./organization/organization.controller";
 
 import { AuthenticationMiddleware } from "./user/authentication.middleware";
 import { AuthenticationService } from "./user/authentication.service";
@@ -23,6 +25,7 @@ import { AuthenticationService } from "./user/authentication.service";
         AnimalsModule,
         EventModule,
         MeetingModule,
+        OrganizationModule,
         UserModule,
     ],
     controllers: [AppController],
@@ -33,7 +36,8 @@ export class ApplicationModule implements NestModule {
         consumer.apply(AuthenticationMiddleware)
             .forRoutes(
                 EventController,
-                MeetingController
+                MeetingController,
+                OrganizationController
             );
     }
 }

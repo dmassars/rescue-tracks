@@ -1,7 +1,7 @@
 import { AbstractEntity } from "../abstract-entity";
 import { Entity, Column, JoinColumn, ManyToOne } from "typeorm";
 
-import { Organization } from "../entities/organization.entity";
+import { Organization } from "../organization/organization.entity";
 
 @Entity({name: "permission_attribute"})
 export class PermissionAttribute extends AbstractEntity {

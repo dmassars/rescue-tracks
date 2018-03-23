@@ -1,15 +1,21 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, JoinColumn, ManyToOne, OneToMany } from "typeorm";
+import {
+    Entity,
+    Column,
+    JoinColumn,
+    ManyToMany,
+    OneToMany
+} from "typeorm";
 
-import { Organization } from "./organization.entity";
-import { EventEntity } from "../event/event.entity";
-import { EventAttender } from "./event-attender.entity";
+import { Organization } from "../organization/organization.entity";
+import { EventAttendance } from "./event-attendance.entity";
+import { PersonMeeting } from "./person-meeting.entity";
 
 @Entity()
 export class Adopter extends AbstractEntity {
 
-    @ManyToOne(type => Organization)
-    organization: Promise<Organization>;
+    @ManyToMany(type => Organization, "adopters")
+    organizations: Promise<Organization[]>;
 
     @Column()
     firstName: string;
@@ -17,18 +23,18 @@ export class Adopter extends AbstractEntity {
     @Column()
     lastName: string;
 
-    @Column()
+    @Column({unique: true})
     email: string;
 
-    @Column()
+    @Column({unique: true})
     phoneNumber: string;
 
     @Column({default: false})
     preapproved: boolean;
 
-    @Column({nullable: true})
-    externalId: string;
+    @OneToMany(type => EventAttendance, "adopter")
+    eventAttendances: Promise<EventAttendance[]>;
 
-    @OneToMany(type => EventAttender, eventAttender => eventAttender.adopter)
-    eventAttenders: Promise<EventAttender[]>;
+    @OneToMany(type => PersonMeeting, "adopter")
+    personMeetings: Promise<PersonMeeting[]>;
 }

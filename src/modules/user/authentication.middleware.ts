@@ -8,7 +8,7 @@ export class AuthenticationMiddleware implements NestMiddleware {
     async resolve(): Promise<ExpressMiddleware> {
         return async (req, res, next) => {
             try {
-                req.body.authorizedUser = await this.authenticationService.userFromToken(req.headers.authorization)
+                Object.assign(req.body, await this.authenticationService.loadFromToken(req.headers.authorization));
                 next();
             } catch(error) {
                 console.error(error);

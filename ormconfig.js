@@ -36,7 +36,7 @@ if(process.env.NODE_ENV == "production") {
       username: "postgres",
       password: "postgres",
       database: "rescue_tracks",
-      // synchronize: true,
+      synchronize: !!process.env.SYNC,
    });
 }
 

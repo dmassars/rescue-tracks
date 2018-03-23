@@ -1,12 +1,12 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, ManyToOne, JoinColumn, Index} from "typeorm";
+import { Entity, Column, ManyToOne, JoinColumn, Index, BeforeUpdate} from "typeorm";
 
 import { Animal } from "./animal.entity";
 import { PersonMeeting } from "./person-meeting.entity";
+import { EventEntity } from "../event/event.entity";
 
 @Entity()
 @Index("uix_animal_meeting_on_animal_and_active", ["animal", "active"], {unique: true})
-@Index("uix_animal_meeting_on_person_meeting_and_active", ["personMeeting", "active"], {unique: true})
 export class AnimalMeeting extends AbstractEntity {
 
     @Column({nullable: true})
@@ -15,15 +15,18 @@ export class AnimalMeeting extends AbstractEntity {
     @Column({nullable: true, select: false, default: true})
     active: boolean;
 
+    @Column({nullable: true})
+    adopted: boolean;
+
     @ManyToOne(type => Animal, animal => animal.animalMeetings)
     animal: Promise<Animal>;
 
-    @ManyToOne(type => PersonMeeting, attender => attender.animalMeetings)
-    personMeeting: Promise<PersonMeeting>;
+    @ManyToOne(type => EventEntity)
+    event: Promise<EventEntity>;
 
-    async end(): Promise<AnimalMeeting> {
-        this.active = null;
-        this.concludedAt = new Date();
-        return this.save();
+    @BeforeUpdate()
+    ensureActive() {
+        debugger;
     }
+
 }

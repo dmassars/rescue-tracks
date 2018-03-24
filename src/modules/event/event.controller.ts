@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Param, Post, Put, Query } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Put, Query, UseGuards } from '@nestjs/common';
 
 import { Observable } from "rxjs";
 import * as _ from "lodash";
@@ -7,10 +7,13 @@ import * as moment from "moment";
 import { EventSocket } from "./event.socket";
 import { EventService } from "./event.service";
 
+import { OrganizationEventGuard } from "./organization-event.guard";
+
 import { AnimalsService } from "../animals/animals.service";
 
 import { EventEntity } from "./event.entity";
 import { User } from "../user/user.entity";
+import { Organization } from "../organization/organization.entity";
 import { Adopter, Animal, EventAttendance, PersonMeeting } from "../entities";
 
 @Controller("/events")
@@ -19,16 +22,25 @@ export class EventController {
     constructor(private animalsService: AnimalsService, private eventSocket: EventSocket, private eventService: EventService) { }
 
     @Get("/")
-    getEvents(): Observable<EventEntity[]> {
-        return Observable.fromPromise(EventEntity.find({relations: ["animals"]}));
+    getEvents(@Body("currentOrganization") organization: Organization): Observable<EventEntity[]> {
+        return Observable.fromPromise(
+            EventEntity.createQueryBuilder("events")
+                       .loadRelationCountAndMap("events.animalCount", "events.animals")
+                       .where("events.organization = :organization", {organization: organization.id})
+                       .orderBy("events.startTime", "DESC")
+                       .getMany()
+        );
     }
 
     @Post("/")
-    createEvent(@Body() event: EventEntity): Observable<EventEntity> {
-        return Observable.fromPromise(Object.assign(new EventEntity(), event).save());
+    createEvent(@Body() event: EventEntity, @Body("currentOrganization") organization: Organization): Observable<EventEntity> {
+        return Observable.fromPromise(
+            (new EventEntity(Object.assign(event, {organization}))).save()
+        );
     }
 
     @Get(":id")
+    @UseGuards(OrganizationEventGuard)
     getEvent(@Param("id") eventId: number): Observable<EventEntity> {
         return Observable.fromPromise(EventEntity.findOneById(eventId, {relations: ["animals"]}));
     }

@@ -10,6 +10,7 @@ import { UserModule } from "./user/user.module";
 import { AppController } from "./app.controller";
 import { EventController } from "./event/event.controller";
 import { MeetingController } from "./meeting/meeting.controller";
+import { MembershipController } from "./organization/membership.controller";
 import { OrganizationController } from "./organization/organization.controller";
 
 import { AuthenticationMiddleware } from "./user/authentication.middleware";
@@ -37,6 +38,7 @@ export class ApplicationModule implements NestModule {
             .forRoutes(
                 EventController,
                 MeetingController,
+                MembershipController,
                 OrganizationController
             );
     }

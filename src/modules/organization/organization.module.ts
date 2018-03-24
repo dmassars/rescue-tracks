@@ -2,6 +2,7 @@ import { Module } from "@nestjs/common";
 
 import { OrganizationService } from "./organization.service";
 
+import { MembershipController } from "./membership.controller";
 import { OrganizationController } from "./organization.controller";
 
 import { UserModule } from "../user/user.module";
@@ -10,7 +11,10 @@ import { UserModule } from "../user/user.module";
     modules: [
         UserModule,
     ],
-    controllers: [OrganizationController],
+    controllers: [
+        MembershipController,
+        OrganizationController,
+    ],
     components: [
         OrganizationService
     ],

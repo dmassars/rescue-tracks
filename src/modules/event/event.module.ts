@@ -1,4 +1,4 @@
-import { Module } from "@nestjs/common";
+import { Module, NestModule } from "@nestjs/common";
 
 import { EventController } from "./event.controller";
 

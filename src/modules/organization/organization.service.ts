@@ -26,7 +26,6 @@ export class OrganizationService {
                 ]).then(([membership, permissionAttribute]) => {
                     membership.permissionAttributes.then((permissionAttributes) => {
                         permissionAttributes.push(permissionAttribute);
-                        debugger;
                         membership.status = "active";
                         return membership.save();
                     })

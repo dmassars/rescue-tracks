@@ -37,4 +37,7 @@ export class EventEntity extends AbstractEntity {
 
     @OneToMany(type => EventAttendance, "event")
     eventAttendances: Promise<EventAttendance[]>;
+
+    // NOT PERSISTED
+    animalCount: number;
 }

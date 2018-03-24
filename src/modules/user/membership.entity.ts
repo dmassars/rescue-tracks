@@ -12,13 +12,14 @@ import { Organization } from "../organization/organization.entity";
 import { User } from "./user.entity";
 import { PermissionAttribute } from "./permission-attribute.entity";
 
+export type MembershipStatus = "pending"|"active"|"inactive"|"rejected";
 
 @Entity()
 @Index(["member", "organization"], {unique: true})
 export class Membership extends AbstractEntity {
 
     @Column({default: "pending"})
-    status: "pending"|"active"|"inactive";
+    status: MembershipStatus;
 
     @ManyToOne(type => Organization, organization => organization.memberships)
     organization: Promise<Organization>;

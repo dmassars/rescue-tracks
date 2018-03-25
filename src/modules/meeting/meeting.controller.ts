@@ -81,10 +81,10 @@ export class MeetingController {
     adoptAnimalToAdopter(@Param("id") personMeetingId: number): Observable<{success: boolean, error?: string}> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .where("person_meeting.id = :personMeetingId", {personMeetingId})
                 .innerJoinAndSelect("person_meeting.animalMeetings", "animal_meetings")
                 .innerJoinAndSelect("animal_meetings.animal", "animals")
                 .where("animal_meetings.active = true")
+                .andWhere("person_meeting.id = :personMeetingId", {personMeetingId})
                 .andWhere("person_meeting.concludedAt IS NULL")
                 .getOne().then(personMeeting => {
                     if(!personMeeting) {
@@ -110,9 +110,9 @@ export class MeetingController {
     endMeetingWithAdopter(@Param("id") personMeetingId: number): Observable<{success: boolean, error?: string}> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .where("person_meeting.id = :personMeetingId", {personMeetingId})
                 .innerJoin("person_meeting.animalMeetings", "animal_meetings")
                 .where("animal_meetings.active = true")
+                .andWhere("person_meeting.id = :personMeetingId", {personMeetingId})
                 .andWhere("person_meeting.concludedAt IS NULL")
                 .getOne().then((personMeeting) => {
                     if(personMeeting) {

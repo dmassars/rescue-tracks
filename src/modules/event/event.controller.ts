@@ -12,6 +12,7 @@ import { OrganizationEventGuard } from "./organization-event.guard";
 import { AnimalsService } from "../animals/animals.service";
 
 import { EventEntity } from "./event.entity";
+import { EventPersonnel } from "./event-personnel.entity";
 import { User } from "../user/user.entity";
 import { Organization } from "../organization/organization.entity";
 import { Adopter, Animal, EventAttendance, PersonMeeting } from "../entities";
@@ -22,14 +23,17 @@ export class EventController {
     constructor(private animalsService: AnimalsService, private eventSocket: EventSocket, private eventService: EventService) { }
 
     @Get("/")
-    getEvents(@Body("currentOrganization") organization: Organization): Observable<EventEntity[]> {
-        return Observable.fromPromise(
-            EventEntity.createQueryBuilder("events")
-                       .loadRelationCountAndMap("events.animalCount", "events.animals")
-                       .where("events.organization = :organization", {organization: organization.id})
-                       .orderBy("events.startTime", "DESC")
-                       .getMany()
-        );
+    getEvents(@Body("currentOrganization") organization: Organization, @Query("active") active: boolean): Observable<EventEntity[]> {
+        let events = EventEntity.createQueryBuilder("events")
+                                .loadRelationCountAndMap("events.animalCount", "events.animals")
+                                .where("events.organization = :organization", {organization: organization.id})
+                                .orderBy("events.startTime", "DESC")
+
+        if (active) {
+            events = events.andWhere("NOW() BETWEEN events.startTime AND events.endTime");
+        }
+
+        return Observable.fromPromise(events.getMany());
     }
 
     @Post("/")
@@ -46,6 +50,7 @@ export class EventController {
     }
 
     @Put(":id")
+    @UseGuards(OrganizationEventGuard)
     editEvent(@Param("id") eventId: number, @Body() eventDetails: {animals: number[]}): Observable<EventEntity> {
         return Observable.fromPromise(Promise.all([
             EventEntity.findOneById(eventId),
@@ -63,7 +68,19 @@ export class EventController {
         }));
     }
 
+    @Post(":id/join")
+    @UseGuards(OrganizationEventGuard)
+    joinEvent(@Param("id") eventId: number, @Body("currentUser") personnel: User): Observable<EventPersonnel> {
+        return Observable.fromPromise(
+            (new EventPersonnel({
+                personnel,
+                event: EventEntity.findOneById(eventId),
+            })).save()
+        );
+    }
+
     @Get(":id/animals")
+    @UseGuards(OrganizationEventGuard)
     async getAnimalsForEvent(@Param("id") eventId: number, @Query("all") getAll: boolean): Promise<Animal[]> {
         getAll = !!getAll;
         let event: EventEntity = await EventEntity.findOneById(eventId);
@@ -86,6 +103,7 @@ export class EventController {
     }
 
     @Get(":id/animals-for-meeting")
+    @UseGuards(OrganizationEventGuard)
     getAnimalsForMeetings(@Param("id") eventId: number): Observable<Animal[]> {
         return Observable.fromPromise(
             this.eventService.getAnimalsAtEvent(eventId)
@@ -93,6 +111,7 @@ export class EventController {
     }
 
     @Get(":id/attendance")
+    @UseGuards(OrganizationEventGuard)
     getPersonMeeting(@Param("id") eventId: number): Observable<EventAttendance[]> {
         return Observable.fromPromise(
             this.eventService.getAdoptersWaitingAtEvent(eventId)
@@ -100,6 +119,7 @@ export class EventController {
     }
 
     @Post(":id/attendance")
+    @UseGuards(OrganizationEventGuard)
     async addAttendeeToEvent(@Param("id") eventId: number, @Body("attendee") attendee: Adopter): Promise<void> {
         let [event, adopter] = await Promise.all([
                 EventEntity.findOneById(eventId, {relations: ["eventAttendances"]}),
@@ -121,6 +141,7 @@ export class EventController {
     }
 
     @Put(":id/attendance")
+    @UseGuards(OrganizationEventGuard)
     assignAdoptionCounselor(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User, @Body("attendee") attendee: Adopter): Observable<PersonMeeting> {
         return Observable.fromPromise(
             EventAttendance.findOne({where: {event_id: eventId, adopter_id: attendee.id}})
@@ -136,6 +157,7 @@ export class EventController {
     }
 
     @Get(":id/meetings")
+    @UseGuards(OrganizationEventGuard)
     getMeetingsAtEvent(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<PersonMeeting[]> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")

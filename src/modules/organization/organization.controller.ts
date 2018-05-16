@@ -28,12 +28,12 @@ export class OrganizationController {
 
     @Get(":id")
     getOrganization(@Param("id") organizationId: number): Promise<Organization> {
-        return Organization.findOneById(organizationId, {relations: ["address"]});
+        return Organization.findOne({id: organizationId}, {relations: ["address"]});
     }
 
     @Post(":id")
     async updateOrganization(@Param("id") organizationId: number, @Body() organization: Organization): Promise<Organization> {
-        return this.organizationService.updateOrganization(await Organization.findOneById(organizationId), organization);
+        return this.organizationService.updateOrganization(await Organization.findOne({id: organizationId}), organization);
     }
 
     @Get(":id/members")

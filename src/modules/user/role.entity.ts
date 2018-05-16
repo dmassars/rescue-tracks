@@ -3,9 +3,10 @@ import { Entity, Column, JoinTable, ManyToMany, ManyToOne } from "typeorm";
 
 import { PermissionAttribute } from "./permission-attribute.entity";
 import { Organization } from "../organization/organization.entity";
+import { Permissible } from "./permissible.mixin";
 
 @Entity()
-export class Role extends AbstractEntity {
+export class Role extends Permissible(AbstractEntity) {
 
     @Column()
     name: string;

@@ -52,7 +52,7 @@ export class MeetingController {
                     animal: animalId,
                 } as any)
                 .execute().then(() => {
-                    PersonMeeting.findOneById(personMeetingId, {relations: ["event"]}).then((meeting) =>
+                    PersonMeeting.findOne({id: personMeetingId}, {relations: ["event"]}).then((meeting) =>
                         this.eventSocket.updateAnimalsAtEvent((meeting as any).__event__.id)
                     );
                     return AnimalMeeting.findOne({
@@ -72,7 +72,7 @@ export class MeetingController {
                 return meeting.save();
             })
             .then((meeting) => {
-                PersonMeeting.findOneById(personMeetingId, {relations: ["event"]}).then((meeting) =>
+                PersonMeeting.findOne({id: personMeetingId}, {relations: ["event"]}).then((meeting) =>
                     this.eventSocket.updateAnimalsAtEvent((meeting as any).__event__.id)
                 );
 
@@ -99,7 +99,7 @@ export class MeetingController {
 
                     personMeeting.event.then((event) => this.eventSocket.updateAnimalsAtEvent(event.id));
 
-                    return PersonMeeting.updateById(personMeetingId, {concludedAt: new Date()})
+                    return PersonMeeting.update({id: personMeetingId}, {concludedAt: new Date()})
                         .then(() => {
                             return {
                                 success: true,
@@ -125,7 +125,7 @@ export class MeetingController {
                             error: "Adopter still has a meeting going!",
                         };
                     }
-                    return PersonMeeting.updateById(personMeetingId, {concludedAt: new Date()})
+                    return PersonMeeting.update({id: personMeetingId}, {concludedAt: new Date()})
                         .then(() => {
                             return {
                                 success: true,

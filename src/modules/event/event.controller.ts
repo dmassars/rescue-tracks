@@ -11,6 +11,11 @@ import { OrganizationEventGuard } from "./organization-event.guard";
 
 import { AnimalsService } from "../animals/animals.service";
 
+import {
+    PermissibleAction,
+    RequiredPermission
+} from "../user/required-permission.guard";
+
 import { EventEntity } from "./event.entity";
 import { EventPersonnel } from "./event-personnel.entity";
 import { User } from "../user/user.entity";
@@ -44,16 +49,18 @@ export class EventController {
     }
 
     @Get(":id")
+    @RequiredPermission(PermissibleAction.VIEW_CURRENT_ATTENDANCE, PermissibleAction.MANAGE_MEETINGS)
+    @RequiredPermission(PermissibleAction.CREATE_EVENT)
     @UseGuards(OrganizationEventGuard)
     getEvent(@Param("id") eventId: number): Observable<EventEntity> {
-        return Observable.fromPromise(EventEntity.findOneById(eventId, {relations: ["animals"]}));
+        return Observable.fromPromise(EventEntity.findOne({id: eventId}, {relations: ["animals"]}));
     }
 
     @Put(":id")
     @UseGuards(OrganizationEventGuard)
     editEvent(@Param("id") eventId: number, @Body() eventDetails: {animals: number[]}): Observable<EventEntity> {
         return Observable.fromPromise(Promise.all([
-            EventEntity.findOneById(eventId),
+            EventEntity.findOne({id: eventId}),
             (() => {
                 if(eventDetails.animals.length) {
                     return this.animalsService.getRemoteAnimals(eventDetails.animals);
@@ -74,7 +81,7 @@ export class EventController {
         return Observable.fromPromise(
             (new EventPersonnel({
                 personnel,
-                event: EventEntity.findOneById(eventId),
+                event: EventEntity.findOne({id: eventId}),
             })).save()
         );
     }
@@ -83,7 +90,7 @@ export class EventController {
     @UseGuards(OrganizationEventGuard)
     async getAnimalsForEvent(@Param("id") eventId: number, @Query("all") getAll: boolean): Promise<Animal[]> {
         getAll = !!getAll;
-        let event: EventEntity = await EventEntity.findOneById(eventId);
+        let event: EventEntity = await EventEntity.findOne({id: eventId});
 
         let selectedAnimals: Animal[] = await event.animals;
 
@@ -122,7 +129,7 @@ export class EventController {
     @UseGuards(OrganizationEventGuard)
     async addAttendeeToEvent(@Param("id") eventId: number, @Body("attendee") attendee: Adopter): Promise<void> {
         let [event, adopter] = await Promise.all([
-                EventEntity.findOneById(eventId, {relations: ["eventAttendances"]}),
+                EventEntity.findOne({id: eventId}, {relations: ["eventAttendances"]}),
                 Adopter.findOne({email: attendee.email})
             ]);
         let meetings = await event.eventAttendances;

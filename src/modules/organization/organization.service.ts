@@ -12,12 +12,13 @@ import { PermissionAttribute } from "../user/permission-attribute.entity";
 export class OrganizationService {
 
     async createOrganization(params: Organization, user: User): Promise<Organization> {
-        let organization = await (new Organization(_.omit(params, "address"))).save();
+        let organization = await (new Organization(_.chain(params).omit("address").extend({owner: user}).value())).save();
 
         if(params.address) {
             organization.address = (new Address(params.address)).save();
-            await organization.save();
         }
+
+        await organization.save();
 
         return Promise.all([
                 Promise.all([
@@ -48,9 +49,8 @@ export class OrganizationService {
     }
 
     async addMember(organization: Organization|number, user: User|string): Promise<Membership> {
-
         if(!(organization instanceof Organization)) {
-            organization = await Organization.findOneById(organization);
+            organization = await Organization.findOne({id: organization});
         }
 
         if(!(user instanceof User)) {

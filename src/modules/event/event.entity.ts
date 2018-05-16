@@ -25,9 +25,8 @@ export class EventEntity extends AbstractEntity {
     @ManyToOne(type => Organization, organization => organization.events)
     organization: Promise<Organization>;
 
-    @ManyToMany(type => Animal, animal => animal.events, {
-        cascadeInsert: true,
-        cascadeUpdate: true,
+    @ManyToMany(type => Animal, "events", {
+        cascade: ["insert", "update"]
     })
     @JoinTable()
     animals: Promise<Animal[]>;

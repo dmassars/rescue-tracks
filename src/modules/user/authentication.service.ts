@@ -18,7 +18,6 @@ export class AuthenticationService {
     }
 
     public async tokenForUser(user: User, currentOrganization?: Organization): Promise<string> {
-        debugger;
         if (!currentOrganization) {
             let organizations = await Organization.createQueryBuilder("organization")
                                                   .innerJoin("organization.memberships", "membership")
@@ -26,16 +25,20 @@ export class AuthenticationService {
                                                   .andWhere("membership.status = 'active'")
                                                   .getMany();
 
-            debugger;
-
             if (organizations.length == 1) {
                 currentOrganization = organizations[1];
             }
         }
 
+        if (currentOrganization && await user.isOwner(currentOrganization)) {
+            currentOrganization = _.omit(currentOrganization, "__owner__");
+        }
+
         debugger;
+        // user.permissions().then(() => {debugger});
 
         return new Promise<string>((resolve, reject) => {
+            debugger;
             jwt.sign({
                 sub: user.id,
                 data: Object.assign(user, {currentOrganization: currentOrganization})
@@ -62,9 +65,9 @@ export class AuthenticationService {
                         if(error) {
                             reject(error);
                         } else if(payload && payload.sub) {
-                            let currentUser = User.findOneById(payload.sub);
+                            let currentUser = User.findOne({id: payload.sub});
                             let orgId = _.get(payload, "data.currentOrganization.id");
-                            let currentOrganization = Promise.resolve(orgId ? Organization.findOneById(orgId) : undefined);
+                            let currentOrganization = Promise.resolve(orgId ? Organization.findOne({id: orgId}) : undefined);
 
                             Promise.all([currentUser, currentOrganization]).then(([currentUser, currentOrganization]) => {
                                 currentUser.currentOrganization = currentOrganization;

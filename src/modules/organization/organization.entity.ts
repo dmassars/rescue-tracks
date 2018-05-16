@@ -12,7 +12,7 @@ import { Address } from "../entities/address.entity";
 import { Adopter } from "../entities/adopter.entity";
 
 import { EventEntity } from "../event/event.entity";
-import { Membership, PermissionAttribute } from "../user";
+import { User, Membership, PermissionAttribute } from "../user";
 
 @Entity()
 export class Organization extends AbstractEntity {
@@ -23,13 +23,16 @@ export class Organization extends AbstractEntity {
     @ManyToOne(type => Address)
     address: Promise<Address>;
 
-    @OneToMany(type => Membership, membership => membership.organization)
+    @OneToMany(type => Membership, "organization")
     memberships: Promise<Membership[]>;
 
-    @OneToMany(type => EventEntity, event => event.organization)
+    @ManyToOne(type => User, "ownedOrganizations")
+    owner: Promise<User>;
+
+    @OneToMany(type => EventEntity, "organization")
     events: Promise<EventEntity[]>;
 
-    @ManyToMany(type => Adopter, adopter => adopter.organizations)
+    @ManyToMany(type => Adopter, "organizations")
     @JoinTable()
     adopters: Promise<Adopter[]>;
 

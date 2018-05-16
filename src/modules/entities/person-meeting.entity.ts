@@ -13,7 +13,7 @@ export class PersonMeeting extends AbstractEntity {
     concludedAt: Date;
 
     @Column({nullable: true})
-    result: String;
+    result: string;
 
     @ManyToOne(type => User)
     adoptionCounselor: Promise<User>;

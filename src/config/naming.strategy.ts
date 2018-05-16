@@ -1,4 +1,4 @@
-import { NamingStrategyInterface, DefaultNamingStrategy } from "typeorm";
+import { NamingStrategyInterface, DefaultNamingStrategy, Table } from "typeorm";
 import * as _ from "lodash";
 
 export class SnakeCaseNamingStrategy implements NamingStrategyInterface {
@@ -26,12 +26,12 @@ export class SnakeCaseNamingStrategy implements NamingStrategyInterface {
         return _.snakeCase(propertyName);
     }
 
-    indexName(customName: string|undefined, tableName: string, columns: string[]): string {
-        if(customName) {
-            return _.snakeCase(`idx_${customName}`);
+    indexName(tableOrName: string | Table, columns: string[], where?: string): string {
+        if(tableOrName instanceof Table) {
+            tableOrName = tableOrName.name;
         }
 
-        return _.snakeCase(`idx_${tableName}_${columns.join("_")}`);
+        return _.snakeCase(`idx_${tableOrName}_${columns.join("_")}`);
     }
 
     joinColumnName(relationName: string, referencedColumnName: string): string {
@@ -74,14 +74,28 @@ export class SnakeCaseNamingStrategy implements NamingStrategyInterface {
         return this.joinTableColumnName(tableName, propertyName, columnName);
     }
 
-    foreignKeyName(tableName: string, columnNames: string[], referencedTableName: string, referencedColumnNames: string[]): string {
-        let key = `fk_${tableName}_${columnNames.join("_")}_${referencedTableName}_${referencedColumnNames.join("_")}`;
+    primaryKeyName(tableOrName: string|Table, columnNames: string[]): string {
+        return this.keyBuilder("pk", tableOrName, columnNames);
+    }
 
-        if(key.length >= 64) {
-            key = key.replace(/_id/gi, "");
-        }
+    foreignKeyName(tableOrName: string|Table, columnNames: string[]): string { //, referencedTableName: string, referencedColumnNames: string[]): string {
+        return this.keyBuilder("fk", tableOrName, columnNames);
+    }
 
-        return key.substring(0, 63);
+    uniqueConstraintName(tableOrName: string|Table, columnNames: string[]): string {
+        return this.keyBuilder("uq", tableOrName, columnNames);
+    }
+
+    relationConstraintName(tableOrName: string|Table, columnNames: string[], where?: string): string {
+        return this.keyBuilder("rel", tableOrName, columnNames);
+    }
+
+    defaultConstraintName(tableOrName: string|Table, columnName: string): string {
+        return this.keyBuilder("dflt", tableOrName, [columnName]);
+    }
+
+    checkConstraintName(tableOrName: string|Table, expression: string): string {
+        return this.keyBuilder("chk", tableOrName, [expression]);
     }
 
     classTableInheritanceParentColumnName(parentTableName: any, parentTableIdPropertyName: any): string {
@@ -93,5 +107,19 @@ export class SnakeCaseNamingStrategy implements NamingStrategyInterface {
             return _.snakeCase(`${prefix}_${tableName}`);
         }
         return tableName;
+    }
+
+    private keyBuilder(prefix: string, tableOrName: string|Table, columnNames: string[]): string {
+        if(tableOrName instanceof Table) {
+            tableOrName = tableOrName.name;
+        }
+
+        let key = `${prefix}_${tableOrName}_${columnNames.join("_")}`; //_${referencedTableName}_${referencedColumnNames.join("_")}`;
+
+        if(key.length >= 64) {
+            key = key.replace(/_id/gi, "");
+        }
+
+        return key.substring(0, 63);
     }
 }

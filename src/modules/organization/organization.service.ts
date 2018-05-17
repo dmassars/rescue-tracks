@@ -12,32 +12,32 @@ import { PermissionAttribute } from "../user/permission-attribute.entity";
 export class OrganizationService {
 
     async createOrganization(params: Organization, user: User): Promise<Organization> {
-        let organization = await (new Organization(_.chain(params).omit("address").extend({owner: user}).value())).save();
+        const organization = new Organization(
+                                    _.chain(params)
+                                     .omit("address")
+                                     .extend({owner: user})
+                                     .value()
+                                 );
 
         if(params.address) {
-            organization.address = (new Address(params.address)).save();
+            organization.address = Promise.resolve(new Address(params.address));
         }
 
-        await organization.save();
-
-        return Promise.all([
-                Promise.all([
-                    this.addMember(organization.id, user.email),
-                    this.addAttribute(organization, "administrator"),
-                ]).then(([membership, permissionAttribute]) => {
+        return organization.save()
+                .then(() => {
+                    debugger;
+                    return Promise.all([
+                        this.addMember(organization, user),
+                        this.addAttribute(organization, "administrator"),
+                    ]);
+                }
+                ).then(([membership, permissionAttribute]) =>
                     membership.permissionAttributes.then((permissionAttributes) => {
                         permissionAttributes.push(permissionAttribute);
                         membership.status = "active";
                         return membership.save();
                     })
-                }),
-                () => {
-                    if(params.address) {
-                        organization.address = (new Address(params.address)).save();
-                        organization.save();
-                    }
-                },
-            ]).then(() => organization);
+                ).then(() => organization);
     }
 
     updateOrganization(organization: Organization, params: Organization): Promise<Organization> {
@@ -57,7 +57,7 @@ export class OrganizationService {
             user = await User.findOne({email: user});
         }
 
-        return (new Membership({organization, member: user})).save()
+        return (new Membership({organization, member: user})).save();
     }
 
     async addAttribute(organization: Organization, attribute: string): Promise<PermissionAttribute> {

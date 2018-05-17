@@ -20,7 +20,7 @@ export class Organization extends AbstractEntity {
     @Column({unique: true})
     name: string;
 
-    @ManyToOne(type => Address)
+    @ManyToOne(type => Address, {cascade: ["insert", "update"]})
     address: Promise<Address>;
 
     @OneToMany(type => Membership, "organization")

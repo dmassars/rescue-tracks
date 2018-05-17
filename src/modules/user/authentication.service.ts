@@ -34,11 +34,7 @@ export class AuthenticationService {
             currentOrganization = _.omit(currentOrganization, "__owner__");
         }
 
-        debugger;
-        // user.permissions().then(() => {debugger});
-
         return new Promise<string>((resolve, reject) => {
-            debugger;
             jwt.sign({
                 sub: user.id,
                 data: Object.assign(user, {currentOrganization: currentOrganization})

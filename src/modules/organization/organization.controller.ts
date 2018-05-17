@@ -28,7 +28,7 @@ export class OrganizationController {
 
     @Get(":id")
     getOrganization(@Param("id") organizationId: number): Promise<Organization> {
-        return Organization.findOne({id: organizationId}, {relations: ["address"]});
+        return Organization.findOne({id: organizationId}, {relations: ["address", "owner"]});
     }
 
     @Post(":id")

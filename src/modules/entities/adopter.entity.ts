@@ -9,6 +9,7 @@ import {
 
 import { Organization } from "../organization/organization.entity";
 import { EventAttendance } from "./event-attendance.entity";
+import { AnimalMeeting } from "./animal-meeting.entity";
 import { PersonMeeting } from "./person-meeting.entity";
 
 @Entity()
@@ -34,6 +35,9 @@ export class Adopter extends AbstractEntity {
 
     @OneToMany(type => EventAttendance, "adopter")
     eventAttendances: Promise<EventAttendance[]>;
+
+    @OneToMany(type => AnimalMeeting, "adopter")
+    animalMeetings: Promise<AnimalMeeting[]>;
 
     @OneToMany(type => PersonMeeting, "adopter")
     personMeetings: Promise<PersonMeeting[]>;

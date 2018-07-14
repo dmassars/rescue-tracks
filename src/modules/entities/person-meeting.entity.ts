@@ -18,9 +18,9 @@ export class PersonMeeting extends AbstractEntity {
     @ManyToOne(type => User)
     adoptionCounselor: Promise<User>;
 
-    @ManyToOne(type => Adopter)
+    @ManyToOne(type => Adopter, "personMeeetings")
     adopter: Promise<Adopter>;
 
-    @ManyToOne(type => EventEntity)
+    @ManyToOne(type => EventEntity, "events")
     event: Promise<EventEntity>;
 }

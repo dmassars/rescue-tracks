@@ -13,20 +13,22 @@ export class EventService {
 
     getActiveMeetingsAtEvent(eventId: number): Promise<PersonMeeting[]>{
         return PersonMeeting.createQueryBuilder("person_meeting")
-            .innerJoin("person_meeting.eventAttendance", "event_attender")
-            .innerJoinAndSelect("event_attender.adopter", "adopter")
-            .where("event_attender.event_id = :eventId", {eventId})
-            .andWhere("event_attender.active")
+            .innerJoinAndSelect("person_meeting.adopter", "adopter")
+            .innerJoinAndSelect("adopter.eventAttendances", "event_attendance")
+            .where("person_meeting.event_id = :eventId", {eventId})
+            .andWhere("event_attendance.event_id = :eventId", {eventId})
+            .andWhere("event_attendance.concluded_at IS NULL")
             .andWhere("person_meeting.concluded_at IS NULL")
             .getMany();
     }
 
     getAdoptersWaitingAtEvent(eventId: number): Promise<EventAttendance[]> {
-        return EventAttendance.createQueryBuilder("event_attender")
-            .innerJoinAndSelect("event_attender.adopter", "adopter")
-            .leftJoin("event_attender.personMeetings", "person_meetings")
-            .where("event_attender.event_id = :eventId", {eventId})
-            .andWhere("event_attender.active")
+        return EventAttendance.createQueryBuilder("event_attendance")
+            .innerJoinAndSelect("event_attendance.adopter", "adopter")
+            .leftJoin("adopter.personMeetings", "person_meetings")
+            .where("event_attendance.event_id = :eventId", {eventId})
+            .andWhere("person_meetings.event_id = :eventId", {eventId})
+            .andWhere("event_attendance.concluded_at IS NULL")
             .andWhere("(person_meetings.id IS NULL OR person_meetings.concluded_at IS NOT NULL)")
             .getMany();
     }

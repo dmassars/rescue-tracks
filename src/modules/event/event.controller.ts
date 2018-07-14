@@ -130,7 +130,10 @@ export class EventController {
     async addAttendeeToEvent(@Param("id") eventId: number, @Body("attendee") attendee: Adopter): Promise<void> {
         let [event, adopter] = await Promise.all([
                 EventEntity.findOne({id: eventId}, {relations: ["eventAttendances"]}),
-                Adopter.findOne({email: attendee.email})
+                Adopter.createQueryBuilder("adopters")
+                       .where("adopters.email = :email", {email: attendee.email})
+                       .orWhere("adopters.phoneNumber = :phoneNumber", {phoneNumber: attendee.phoneNumber})
+                       .getOne()
             ]);
         let meetings = await event.eventAttendances;
 
@@ -149,7 +152,7 @@ export class EventController {
 
     @Put(":id/attendance")
     @UseGuards(OrganizationEventGuard)
-    assignAdoptionCounselor(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User, @Body("attendee") attendee: Adopter): Observable<PersonMeeting> {
+    assignAdoptionCounselor(@Param("id") eventId: number, @Body("currentUser") adoptionCounselor: User, @Body("attendee") attendee: Adopter): Observable<PersonMeeting> {
         return Observable.fromPromise(
             EventAttendance.findOne({where: {event_id: eventId, adopter_id: attendee.id}})
             .then((eventAttendance: EventAttendance) => {
@@ -165,17 +168,20 @@ export class EventController {
 
     @Get(":id/meetings")
     @UseGuards(OrganizationEventGuard)
-    getMeetingsAtEvent(@Param("id") eventId: number, @Body("authorizedUser") adoptionCounselor: User): Observable<PersonMeeting[]> {
+    getMeetingsAtEvent(@Param("id") eventId: number, @Body("currentUser") adoptionCounselor: User): Observable<PersonMeeting[]> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .innerJoin("person_meeting.eventAttendance", "event_attender")
-                .innerJoinAndSelect("event_attender.adopter", "adopter")
-                .leftJoinAndSelect("person_meeting.animalMeetings", "animal_meetings", "animal_meetings.active = true")
+                .innerJoinAndSelect("person_meeting.adopter", "adopter")
+                .innerJoinAndSelect("adopter.eventAttendances", "event_attendance")
+                .leftJoinAndSelect("adopter.animalMeetings", "animal_meetings", "animal_meetings.concluded_at IS NULL")
                 .leftJoinAndSelect("animal_meetings.animal", "animal")
-                .where("event_attender.event_id = :eventId", {eventId})
-                .andWhere("event_attender.active")
+                .where("person_meeting.event_id = :eventId", {eventId})
+                .andWhere("event_attendance.event_id = :eventId", {eventId})
+                .andWhere("animal_meetings.event_id = :eventId", {eventId})
                 .andWhere("person_meeting.adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
+                .andWhere("event_attendance.concluded_at IS NULL")
                 .andWhere("person_meeting.concluded_at IS NULL")
+                .andWhere("animal_meetings.concluded_at IS NULL")
                 .orderBy("person_meeting.created_at", "DESC")
                 .getMany()
         );

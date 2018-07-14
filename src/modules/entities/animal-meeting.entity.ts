@@ -2,7 +2,7 @@ import { AbstractEntity } from "../abstract-entity";
 import { Entity, Column, ManyToOne, JoinColumn, Index, BeforeUpdate} from "typeorm";
 
 import { Animal } from "./animal.entity";
-import { PersonMeeting } from "./person-meeting.entity";
+import { Adopter } from "./adopter.entity";
 import { EventEntity } from "../event/event.entity";
 
 @Entity()
@@ -18,10 +18,13 @@ export class AnimalMeeting extends AbstractEntity {
     @Column({nullable: true})
     adopted: boolean;
 
-    @ManyToOne(type => Animal, animal => animal.animalMeetings)
+    @ManyToOne(type => Animal, "animalMeetings")
     animal: Promise<Animal>;
 
-    @ManyToOne(type => EventEntity)
+    @ManyToOne(type => Adopter, "animalMeetings")
+    adopter: Promise<Adopter>;
+
+    @ManyToOne(type => EventEntity, "animalMeetings")
     event: Promise<EventEntity>;
 
     @BeforeUpdate()

@@ -27,7 +27,7 @@ export class EventService {
             .innerJoinAndSelect("event_attendance.adopter", "adopter")
             .leftJoin("adopter.personMeetings", "person_meetings")
             .where("event_attendance.event_id = :eventId", {eventId})
-            .andWhere("person_meetings.event_id = :eventId", {eventId})
+            .andWhere("(person_meetings.event_id IS NULL OR person_meetings.event_id = :eventId)", {eventId})
             .andWhere("event_attendance.concluded_at IS NULL")
             .andWhere("(person_meetings.id IS NULL OR person_meetings.concluded_at IS NOT NULL)")
             .getMany();

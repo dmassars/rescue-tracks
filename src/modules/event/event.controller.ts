@@ -141,13 +141,15 @@ export class EventController {
             adopter = await Object.assign(new Adopter(), attendee).save();
         }
 
-        let newEventAttendance = Object.assign(new EventAttendance(), {adopter, event});
+        EventAttendance.findOne({where: {adopter, event}}).then((eventAttendance) => {
+            if (!eventAttendance) {
+                let newEventAttendance = Object.assign(new EventAttendance(), {adopter, event});
 
-        meetings.push(newEventAttendance);
+                meetings.push(newEventAttendance);
 
-        newEventAttendance.save()
-            .then(() => event.save())
-            .then(() => this.eventSocket.updateAdoptersAtEvent(eventId));
+                return newEventAttendance.save().then(() => event.save());
+            }
+        }).then(() => this.eventSocket.updateAdoptersAtEvent(eventId));
     }
 
     @Put(":id/attendance")

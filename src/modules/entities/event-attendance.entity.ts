@@ -16,6 +16,6 @@ export class EventAttendance extends AbstractEntity {
     @ManyToOne(type => Adopter)
     adopter: Promise<Adopter>;
 
-    @Column()
+    @Column({nullable: true})
     concludedAt: Date;
 }

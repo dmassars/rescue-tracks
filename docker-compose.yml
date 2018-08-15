@@ -1,5 +1,38 @@
-version: "3"
+version: "3.7"
+volumes:
+  db-data:
+networks:
+  rescue_tracks:
 services:
+  rescue_tracks_frontend:
+    image: rescue_tracks_frontend:latest
+    build:
+      context: ../rescue-tracks-frontend
+    depends_on:
+      - rescue_tracks
+    ports:
+      - "4200:4200"
+    stop_grace_period: 10s
+    networks:
+      rescue_tracks:
+        aliases:
+          - frontend
+
+  rescue_tracks:
+    image: rescue_tracks_server:latest
+    build:
+      context: .
+    depends_on:
+      - database
+    ports:
+      - "9000:9000"
+      - "9229:9229"
+    stop_grace_period: 10s
+    networks:
+      rescue_tracks:
+        aliases:
+          - server
+
   database:
     image: postgres:9
     volumes:
@@ -7,6 +40,7 @@ services:
     ports:
       - "5439:5432"
     restart: "always"
-
-volumes:
-  db-data:
+    networks:
+      rescue_tracks:
+        aliases:
+          - db

@@ -31,8 +31,8 @@ if(process.env.NODE_ENV == "production") {
    }
 
    base_configs = Object.assign(base_configs, {
-      host: "localhost",
-      port: 5439,
+      host: "db",
+      port: 5432,
       username: "postgres",
       password: "postgres",
       database: "rescue_tracks",

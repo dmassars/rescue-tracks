@@ -1,6 +1,10 @@
 version: "3.7"
 volumes:
   db-data:
+  rescue_tracks_files:
+    external: true
+  rescue_tracks_frontend_files:
+    external: true
 networks:
   rescue_tracks:
 services:
@@ -12,6 +16,8 @@ services:
       - rescue_tracks
     ports:
       - "4200:4200"
+    volumes:
+      - rescue_tracks_frontend_files:/rescue_tracks:nocopy
     stop_grace_period: 10s
     networks:
       rescue_tracks:
@@ -27,6 +33,8 @@ services:
     ports:
       - "9000:9000"
       - "9229:9229"
+    volumes:
+      - rescue_tracks_files:/rescue_tracks:nocopy
     stop_grace_period: 10s
     networks:
       rescue_tracks:

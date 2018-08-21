@@ -18,13 +18,14 @@ export class MeetingController {
     getMeeting(@Param("id") personMeetingId: number): Observable<PersonMeeting> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .leftJoin("person_meeting.animalMeetings", "animal_meetings")
-                .innerJoin("person_meeting.eventAttendance", "event_attender")
-                .innerJoinAndSelect("event_attender.adopter", "adopter")
+                .innerJoin("person_meeting.adopter", "adopter")
+                .innerJoin("adopter.eventAttendance", "event_attendance")
+                .leftJoin("adopter.animalMeetings", "animal_meetings")
                 .leftJoinAndSelect("animal_meetings.animal", "animal")
                 .where("person_meeting.id = :personMeetingId", {personMeetingId})
-                .andWhere("animal_meetings.active = true")
                 .andWhere("person_meeting.concludedAt IS NULL")
+                .andWhere("event_attendance.event_id = person_meeting.event_id")
+                .andWhere("animal_meetings.id IS NULL OR (animal_meetings.active = true AND animal_meetings.event_id = person_meeting.event_id)")
                 .getOne()
         );
     }
@@ -33,9 +34,8 @@ export class MeetingController {
     getFullDetails(@Param("id") personMeetingId: number): Observable<PersonMeeting> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .innerJoin("person_meeting.eventAttendance", "event_attender")
-                .innerJoinAndSelect("event_attender.event", "event")
-                .innerJoinAndSelect("event_attender.adopter", "adopter")
+                .innerJoinAndSelect("person_meeting.event", "event")
+                .innerJoinAndSelect("person_meeting.adopter", "adopter")
                 .innerJoinAndSelect("person_meeting.adoptionCounselor", "adoptionCounselor")
                 .where("person_meeting.id = :personMeetingId", {personMeetingId})
                 .getOne()

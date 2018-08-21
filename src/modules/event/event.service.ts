@@ -37,10 +37,8 @@ export class EventService {
         return Animal.createQueryBuilder("animals")
             .innerJoin("animals.events", "events")
             .leftJoinAndSelect("animals.animalMeetings", "animal_meetings", "animal_meetings.active = true")
-            .leftJoinAndSelect("animal_meetings.personMeeting", "person_meetings")
-            .leftJoinAndSelect("person_meetings.adoptionCounselor", "otherAdoptionCounselors")
-            .leftJoin("person_meetings.eventAttendance", "event_attenders")
-            .leftJoinAndSelect("event_attenders.adopter", "adopters")
+            .leftJoinAndSelect("animal_meetings.adoptionCounselor", "otherAdoptionCounselors")
+            .leftJoinAndSelect("animal_meetings.adopter", "adopters")
             .orderBy("animals.name", "ASC")
             .where("events.id = :eventId", {eventId})
             .getMany();

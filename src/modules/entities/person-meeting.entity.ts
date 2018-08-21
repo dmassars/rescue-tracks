@@ -15,12 +15,12 @@ export class PersonMeeting extends AbstractEntity {
     @Column({nullable: true})
     result: string;
 
-    @ManyToOne(type => User)
+    @ManyToOne(type => User, "personMeetings")
     adoptionCounselor: Promise<User>;
 
     @ManyToOne(type => Adopter, "personMeeetings")
     adopter: Promise<Adopter>;
 
-    @ManyToOne(type => EventEntity, "events")
+    @ManyToOne(type => EventEntity, "personMeetings")
     event: Promise<EventEntity>;
 }

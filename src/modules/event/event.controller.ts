@@ -158,7 +158,7 @@ export class EventController {
         return Observable.fromPromise(
             EventAttendance.findOne({where: {event_id: eventId, adopter_id: attendee.id}})
             .then((eventAttendance: EventAttendance) => {
-                let newPersonMeeting = Object.assign(new PersonMeeting, {eventAttendance, adoptionCounselor});
+                let newPersonMeeting = Object.assign(new PersonMeeting(), {adopter: attendee, event: {id: eventId}, adoptionCounselor});
 
                 return newPersonMeeting.save().then(() => {
                     this.eventSocket.updateAdoptersAtEvent(eventId);

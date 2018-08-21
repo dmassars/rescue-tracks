@@ -3,7 +3,7 @@ import { Entity, Column, ManyToMany, OneToMany, ManyToOne } from "typeorm";
 import { AbstractEntity } from "../abstract-entity";
 import { Permissible } from "./permissible.mixin";
 
-import { PersonMeeting } from "../entities";
+import { AnimalMeeting, PersonMeeting } from "../entities";
 import { EventPersonnel } from "../event/event-personnel.entity";
 import { Membership } from "./membership.entity";
 import { Organization } from "../organization/organization.entity";
@@ -32,12 +32,17 @@ export class User extends Permissible(AbstractEntity) {
     @OneToMany(type => PersonMeeting, "adoptionCounselor")
     counselings: Promise<PersonMeeting[]>;
 
+    @OneToMany(type => AnimalMeeting, "adoptionCounselor")
+    animalMeetings: Promise<AnimalMeeting[]>;
+
     @OneToMany(type => Organization, "owner")
     ownedOrganizations: Promise<Organization[]>;
 
     currentOrganization: Organization;
 
     async isOwner(organization: Organization): Promise<boolean> {
-        return (await (await organization.owner).id) == this.id;
+        let owner = await organization.owner;
+
+        return owner && (await owner.id) == this.id;
     }
 }

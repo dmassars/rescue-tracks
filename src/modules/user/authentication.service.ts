@@ -26,7 +26,7 @@ export class AuthenticationService {
                                                   .getMany();
 
             if (organizations.length == 1) {
-                currentOrganization = organizations[1];
+                currentOrganization = organizations[0];
             }
         }
 

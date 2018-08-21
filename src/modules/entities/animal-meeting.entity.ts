@@ -1,6 +1,7 @@
 import { AbstractEntity } from "../abstract-entity";
 import { Entity, Column, ManyToOne, JoinColumn, Index, BeforeUpdate} from "typeorm";
 
+import { User } from "../user/user.entity";
 import { Animal } from "./animal.entity";
 import { Adopter } from "./adopter.entity";
 import { EventEntity } from "../event/event.entity";
@@ -17,6 +18,9 @@ export class AnimalMeeting extends AbstractEntity {
 
     @Column({nullable: true})
     adopted: boolean;
+
+    @ManyToOne(type => User, "animalMeetings")
+    adoptionCounselor: Promise<User>;
 
     @ManyToOne(type => Animal, "animalMeetings")
     animal: Promise<Animal>;

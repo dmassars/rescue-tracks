@@ -11,4 +11,6 @@ RUN npm i --depth=1
 
 COPY . /rescue_tracks/
 
+ENV SYNC=true
+
 CMD ["npm", "run", "start:watch"]

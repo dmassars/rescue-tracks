@@ -26,7 +26,7 @@ export class Organization extends AbstractEntity {
     @OneToMany(type => Membership, "organization")
     memberships: Promise<Membership[]>;
 
-    @ManyToOne(type => User, "ownedOrganizations")
+    @ManyToOne(type => User, "ownedOrganizations", {nullable: false})
     owner: Promise<User>;
 
     @OneToMany(type => EventEntity, "organization")

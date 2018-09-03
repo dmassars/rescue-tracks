@@ -22,7 +22,7 @@ export class EventEntity extends AbstractEntity {
     @Column()
     endTime: Date;
 
-    @ManyToOne(type => Organization, organization => organization.events)
+    @ManyToOne(type => Organization, organization => organization.events, {nullable: false})
     organization: Promise<Organization>;
 
     @ManyToMany(type => Animal, "events", {

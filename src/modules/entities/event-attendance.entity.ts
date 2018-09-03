@@ -10,10 +10,10 @@ import { Adopter } from "./adopter.entity";
 @Index(["event", "adopter"], {unique: true})
 export class EventAttendance extends AbstractEntity {
 
-    @ManyToOne(type => EventEntity)
+    @ManyToOne(type => EventEntity, {nullable: false})
     event: Promise<EventEntity>;
 
-    @ManyToOne(type => Adopter)
+    @ManyToOne(type => Adopter, {nullable: false})
     adopter: Promise<Adopter>;
 
     @Column({nullable: true})

@@ -10,7 +10,7 @@ import { ShelterLuvAnimal } from "../shelterluv/shelterluv.animal";
 @Entity()
 export class Animal extends AbstractEntity {
 
-    @ManyToOne(type => Organization)
+    @ManyToOne(type => Organization, {nullable: false})
     organization: Promise<Organization>;
 
     @Column()
@@ -25,7 +25,7 @@ export class Animal extends AbstractEntity {
     @Column()
     photoURL: string;
 
-    @Column()
+    @Column({nullable: true})
     externalId: string;
 
     @Column({nullable: true})

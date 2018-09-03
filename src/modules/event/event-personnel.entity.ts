@@ -18,6 +18,6 @@ export class EventPersonnel extends AbstractEntity {
     @ManyToOne(type => Role)
     role: Promise<Role>;
 
-    @Column()
+    @Column({nullable: true})
     endedAt: Date;
 }

@@ -10,23 +10,6 @@ import { RequiredPermissionGuard } from "./modules/user/required-permission.guar
 
 const PORT = Number(process.env.PORT) || 9000;
 
-function configureServer(): express.Application {
-    const server = express();
-
-    server.use(bodyParser.json());
-    server.use(cors());
-
-    server.use((req, res, next) => {
-        res.header("access-control-expose-headers", `
-            Content-Length
-            X-JWT
-        `.trim().replace(/\s+/g, ","));
-        next();
-    })
-
-    return server;
-}
-
 function addPermissionsGuard(app: INestApplication): void {
     const permissionsGuard = app.select(UserModule).get(RequiredPermissionGuard);
 
@@ -39,7 +22,7 @@ async function bootstrap() {
             exposedHeaders: ["Content-Length", "X-JWT"]
         },
         bodyParser: true
-    });//configureServer());
+    });
 
     addPermissionsGuard(app);
 

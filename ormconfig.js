@@ -35,8 +35,7 @@ if(process.env.NODE_ENV == "production") {
       port: 5432,
       username: "postgres",
       password: "postgres",
-      database: "rescue_tracks",
-      synchronize: !!process.env.SYNC,
+      database: "rescue_tracks"
    });
 }
 

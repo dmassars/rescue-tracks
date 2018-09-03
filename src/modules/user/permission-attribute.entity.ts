@@ -9,6 +9,6 @@ export class PermissionAttribute extends AbstractEntity {
     @Column()
     attribute: string;
 
-    @ManyToOne(type => Organization, organization => organization.permissionAttributes)
+    @ManyToOne(type => Organization, organization => organization.permissionAttributes, {nullable: false})
     organization: Promise<Organization>;
 }

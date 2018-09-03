@@ -21,10 +21,10 @@ export class Membership extends AbstractEntity {
     @Column({default: "pending"})
     status: MembershipStatus;
 
-    @ManyToOne(type => Organization, organization => organization.memberships)
+    @ManyToOne(type => Organization, organization => organization.memberships, {nullable: false})
     organization: Promise<Organization>;
 
-    @ManyToOne(type => User, member => member.memberships)
+    @ManyToOne(type => User, member => member.memberships, {nullable: false})
     member: Promise<User>;
 
     @ManyToMany(type => PermissionAttribute)

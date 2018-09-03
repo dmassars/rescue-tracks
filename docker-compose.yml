@@ -1,12 +1,15 @@
 version: "3.7"
+
 volumes:
   db-data:
   rescue_tracks_files:
     external: true
   rescue_tracks_frontend_files:
     external: true
+
 networks:
   rescue_tracks:
+
 services:
   rescue_tracks_frontend:
     image: rescue_tracks_frontend:latest

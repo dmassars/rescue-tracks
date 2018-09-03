@@ -19,16 +19,16 @@ export class AnimalMeeting extends AbstractEntity {
     @Column({nullable: true})
     adopted: boolean;
 
-    @ManyToOne(type => User, "animalMeetings")
+    @ManyToOne(type => User, "animalMeetings", {nullable: false})
     adoptionCounselor: Promise<User>;
 
-    @ManyToOne(type => Animal, "animalMeetings")
+    @ManyToOne(type => Animal, "animalMeetings", {nullable: false})
     animal: Promise<Animal>;
 
-    @ManyToOne(type => Adopter, "animalMeetings")
+    @ManyToOne(type => Adopter, "animalMeetings", {nullable: false})
     adopter: Promise<Adopter>;
 
-    @ManyToOne(type => EventEntity, "animalMeetings")
+    @ManyToOne(type => EventEntity, "animalMeetings", {nullable: false})
     event: Promise<EventEntity>;
 
     @BeforeUpdate()

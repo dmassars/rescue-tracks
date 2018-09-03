@@ -11,7 +11,7 @@ export class Role extends Permissible(AbstractEntity) {
     @Column()
     name: string;
 
-    @ManyToOne(type => Organization, "roles")
+    @ManyToOne(type => Organization, "roles", {nullable: false})
     organization: Promise<Organization>;
 
     @ManyToMany(type => PermissionAttribute)

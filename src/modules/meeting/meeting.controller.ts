@@ -8,7 +8,7 @@ import { AnimalsService } from "../animals/animals.service";
 import { EventSocket } from "../event/event.socket";
 
 import { User } from "../user/user.entity";
-import { Adopter, Animal, PersonMeeting, AnimalMeeting } from "../entities";
+import { Adopter, Animal, PersonMeeting, AnimalMeeting, EventAttendance } from "../entities";
 
 @Controller("/meetings")
 export class MeetingController {
@@ -18,14 +18,13 @@ export class MeetingController {
     getMeeting(@Param("id") personMeetingId: number): Observable<PersonMeeting> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .innerJoin("person_meeting.adopter", "adopter")
-                .innerJoin("adopter.eventAttendance", "event_attendance")
-                .leftJoin("adopter.animalMeetings", "animal_meetings")
+                .innerJoinAndSelect("person_meeting.adopter", "adopter")
+                .innerJoinAndSelect("adopter.eventAttendances", "event_attendance", "event_attendance.event_id = person_meeting.event_id")
+                .leftJoinAndSelect("adopter.animalMeetings", "animal_meetings", "animal_meetings.event_id = person_meeting.event_id")
                 .leftJoinAndSelect("animal_meetings.animal", "animal")
                 .where("person_meeting.id = :personMeetingId", {personMeetingId})
                 .andWhere("person_meeting.concludedAt IS NULL")
-                .andWhere("event_attendance.event_id = person_meeting.event_id")
-                .andWhere("animal_meetings.id IS NULL OR (animal_meetings.active = true AND animal_meetings.event_id = person_meeting.event_id)")
+                .andWhere("(animal_meetings.id IS NULL OR animal_meetings.active OR animal_meetings.adopted)")
                 .getOne()
         );
     }
@@ -43,53 +42,54 @@ export class MeetingController {
     }
 
     @Post(":id")
-    startMeetingWithAdopter(@Param("id") personMeetingId: number, @Body("animal_id") animalId: number): Observable<AnimalMeeting> {
+    startMeetingWithAdopter(@Param("id") personMeetingId: number, @Body("animal_id") animalId: number, @Body("currentUser") adoptionCounselor: User): Observable<AnimalMeeting> {
         return Observable.fromPromise(
-            AnimalMeeting.createQueryBuilder()
+            PersonMeeting.findOne({id: personMeetingId}, {relations: ["event", "adopter"]})
+            .then(meeting => AnimalMeeting.createQueryBuilder()
                 .insert()
                 .values({
-                    personMeeting: personMeetingId,
+                    event: (meeting as any).__event__,
+                    adopter: (meeting as any).__adopter__,
                     animal: animalId,
+                    adoptionCounselor,
                 } as any)
-                .execute().then(() => {
-                    PersonMeeting.findOne({id: personMeetingId}, {relations: ["event"]}).then((meeting) =>
-                        this.eventSocket.updateAnimalsAtEvent((meeting as any).__event__.id)
-                    );
-                    return AnimalMeeting.findOne({
-                        active: true,
-                        animal: animalId,
-                    } as any)
-                })
+                .execute()
+                .then(() => this.eventSocket.updateAnimalsAtEvent((meeting as any).__event__.id))
+            ).then(() => AnimalMeeting.findOne({
+                    active: true,
+                    animal: animalId,
+                } as any))
         );
     }
 
     @Post(":id/end_animal_meeting")
-    endCurrentAnimalMeetingForAdopter(@Param("id") personMeetingId: number, @Body("currentUser") adoptionCounselor: User): Observable<AnimalMeeting> {
-        return Observable.fromPromise(
-            AnimalMeeting.findOne({personMeeting: personMeetingId, active: true} as any)
-            .then((meeting) => {
-                meeting.concludedAt = new Date();
-                return meeting.save();
-            })
-            .then((meeting) => {
-                PersonMeeting.findOne({id: personMeetingId}, {relations: ["event"]}).then((meeting) =>
-                    this.eventSocket.updateAnimalsAtEvent((meeting as any).__event__.id)
-                );
+    async endCurrentAnimalMeetingForAdopter(@Param("id") personMeetingId: number, @Body("currentUser") adoptionCounselor: User): Promise<AnimalMeeting> {
+        let personMeeting = await PersonMeeting.findOne(personMeetingId, {relations: ["event", "adopter"]});
 
-                return meeting;
-            })
-        );
+        let animalMeeting = await AnimalMeeting.findOne({adoptionCounselor, event: (personMeeting as any).__event__, adopter: (personMeeting as any).__adopter__, active: true, concludedAt: null} as any);
+
+        animalMeeting = _.extend(animalMeeting, {concludedAt: new Date(), active: null, adopted: false});
+
+        await animalMeeting.save();
+
+        this.eventSocket.updateAnimalsAtEvent((personMeeting as any).__event__.id);
+
+        return animalMeeting;
     }
 
     @Post(":id/adopt")
-    adoptAnimalToAdopter(@Param("id") personMeetingId: number): Observable<{success: boolean, error?: string}> {
+    adoptAnimalToAdopter(@Param("id") personMeetingId: number, @Body("currentUser") adoptionCounselor: User): Observable<{success: boolean, error?: string}> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .innerJoinAndSelect("person_meeting.animalMeetings", "animal_meetings")
-                .where("animal_meetings.active = true")
+                .innerJoin("person_meeting.adopter", "adopters")
+                .innerJoin("adopters.animalMeetings", "animal_meeting")
+                .where("animal_meeting.active = true")
+                .andWhere("animal_meeting.concludedAt IS NULL")
                 .andWhere("person_meeting.id = :personMeetingId", {personMeetingId})
                 .andWhere("person_meeting.concludedAt IS NULL")
-                .getOne().then(personMeeting => {
+                .andWhere("animal_meeting.event = person_meeting.event")
+                .andWhere("animal_meeting.adoptionCounselor = person_meeting.adoptionCounselor")
+                .getOne().then(async (personMeeting) => {
                     if(!personMeeting) {
                         return {
                             success: false,
@@ -97,9 +97,21 @@ export class MeetingController {
                         };
                     }
 
-                    personMeeting.event.then((event) => this.eventSocket.updateAnimalsAtEvent(event.id));
+                    personMeeting = await PersonMeeting.findOne(personMeeting.id, {relations: ["event", "adopter"]});
+                    let event = (personMeeting as any).__event__;
+                    let adopter = (personMeeting as any).__adopter__;
 
-                    return PersonMeeting.update({id: personMeetingId}, {concludedAt: new Date()})
+                    let concludedAt = new Date();
+                    let eventSave = EventAttendance.findOne({event, adopter})
+                        .then(eventAttendance => _.extend(eventAttendance, {concludedAt}).save());
+
+                    let animalMeetingSave = AnimalMeeting.findOne({adoptionCounselor, event, adopter, active: true, concludedAt: null} as any)
+                        .then(animalMeeting => _.extend(animalMeeting, {concludedAt, active: null, adopted: true}).save());
+
+                    let meetingSave = _.extend(personMeeting, {concludedAt}).save();
+
+                    return Promise.all([meetingSave, eventSave, animalMeetingSave])
+                        .then(() => this.eventSocket.updateAnimalsAtEvent(event.id))
                         .then(() => {
                             return {
                                 success: true,
@@ -113,10 +125,14 @@ export class MeetingController {
     endMeetingWithAdopter(@Param("id") personMeetingId: number): Observable<{success: boolean, error?: string}> {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
-                .innerJoin("person_meeting.animalMeetings", "animal_meetings")
-                .where("animal_meetings.active = true")
+                .innerJoin("person_meeting.adopter", "adopters")
+                .innerJoin("adopters.animalMeetings", "animal_meeting")
+                .where("animal_meeting.active = true")
+                .andWhere("animal_meeting.active")
                 .andWhere("person_meeting.id = :personMeetingId", {personMeetingId})
                 .andWhere("person_meeting.concludedAt IS NULL")
+                .andWhere("animal_meeting.event = person_meeting.event")
+                .andWhere("animal_meeting.adoptionCounselor = person_meeting.adoptionCounselor")
                 .getOne()
                 .then((personMeeting) => {
                     if(personMeeting) {
@@ -125,8 +141,12 @@ export class MeetingController {
                             error: "Adopter still has a meeting going!",
                         };
                     }
-                    return PersonMeeting.update({id: personMeetingId}, {concludedAt: new Date()})
+                    return PersonMeeting.findOne({id: personMeetingId}, {relations: ["event", "adopter"]})
+                        .then(meeting => _.extend(meeting, {concludedAt: new Date()}).save())
+                        .then(meeting => EventAttendance.findOne({event: meeting.__event__, adopter: meeting.__adopter__}))
+                        .then(eventAttendance => _.extend(eventAttendance, {concludedAt: new Date()}).save())
                         .then(() => {
+
                             return {
                                 success: true,
                             };

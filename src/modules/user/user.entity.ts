@@ -20,7 +20,7 @@ export class User extends Permissible(AbstractEntity) {
     @Column({unique: true})
     email: string;
 
-    @Column({unique: true})
+    @Column({unique: true, nullable: true})
     phoneNumber: string;
 
     @Column({select: false})

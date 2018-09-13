@@ -24,9 +24,7 @@ export class AnimalsService {
         return Promise.all<Animal>(
             _.map(
                 animals,
-                (animal: ShelterLuvAnimal) => Animal.fromShelterLuvAnimal(animal).catch((err) => {
-                    // debugger;
-                })
+                (animal: ShelterLuvAnimal) => Animal.fromShelterLuvAnimal(animal)
             )
         );
     }

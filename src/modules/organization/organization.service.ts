@@ -12,7 +12,7 @@ import { PermissionAttribute } from "../user/permission-attribute.entity";
 export class OrganizationService {
 
     async createOrganization(params: Organization, user: User): Promise<Organization> {
-        const organization = new Organization(
+        let organization = new Organization(
                                     _.chain(params)
                                      .omit("address")
                                      .extend({owner: user})
@@ -24,8 +24,8 @@ export class OrganizationService {
         }
 
         return organization.save()
-                .then(() => {
-                    debugger;
+                .then((organization) => Organization.findOne({name: organization.name}))
+                .then((organization) => {
                     return Promise.all([
                         this.addMember(organization, user),
                         this.addAttribute(organization, "administrator"),

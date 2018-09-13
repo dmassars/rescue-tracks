@@ -33,7 +33,6 @@ export class AnimalMeeting extends AbstractEntity {
 
     @BeforeUpdate()
     ensureActive() {
-        debugger;
     }
 
 }

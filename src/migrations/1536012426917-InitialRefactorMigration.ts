@@ -71,7 +71,7 @@ export class InitialRefactorMigration1536012426917 implements MigrationInterface
             "first_name" character varying NOT NULL,
             "last_name" character varying NOT NULL,
             "email" character varying NOT NULL,
-            "phone_number" character varying NOT NULL,
+            "phone_number" character varying,
             "password" character varying NOT NULL,
 
             CONSTRAINT "uq_users_email" UNIQUE ("email"),

@@ -25,18 +25,17 @@ export class EventService {
     getAdoptersWaitingAtEvent(eventId: number): Promise<EventAttendance[]> {
         return EventAttendance.createQueryBuilder("event_attendance")
             .innerJoinAndSelect("event_attendance.adopter", "adopter")
-            .leftJoin("adopter.personMeetings", "person_meetings")
+            .leftJoin("adopter.personMeetings", "person_meetings", "person_meetings.event_id = event_attendance.event_id")
             .where("event_attendance.event_id = :eventId", {eventId})
-            .andWhere("(person_meetings.event_id IS NULL OR person_meetings.event_id = :eventId)", {eventId})
-            .andWhere("event_attendance.concluded_at IS NULL")
-            .andWhere("(person_meetings.id IS NULL OR person_meetings.concluded_at IS NOT NULL)")
+            .andWhere("event_attendance.concludedAt IS NULL")
+            .andWhere("(person_meetings.id IS NULL)")  // OR person_meetings.concluded_at IS NOT NULL)")
             .getMany();
     }
 
     getAnimalsAtEvent(eventId: number): Promise<Animal[]> {
         return Animal.createQueryBuilder("animals")
             .innerJoin("animals.events", "events")
-            .leftJoinAndSelect("animals.animalMeetings", "animal_meetings", "animal_meetings.active = true")
+            .leftJoinAndSelect("animals.animalMeetings", "animal_meetings", "animal_meetings.active = true OR animal_meetings.adopted = true")
             .leftJoinAndSelect("animal_meetings.adoptionCounselor", "otherAdoptionCounselors")
             .leftJoinAndSelect("animal_meetings.adopter", "adopters")
             .orderBy("animals.name", "ASC")

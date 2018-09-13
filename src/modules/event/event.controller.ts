@@ -58,20 +58,24 @@ export class EventController {
 
     @Put(":id")
     @UseGuards(OrganizationEventGuard)
-    editEvent(@Param("id") eventId: number, @Body() eventDetails: {animals: number[]}): Observable<EventEntity> {
+    editEvent(@Param("id") eventId: number, @Body("animals") animals: number[], @Body("currentOrganization") currentOrganization: Organization): Observable<EventEntity> {
         return Observable.fromPromise(Promise.all([
             EventEntity.findOne({id: eventId}),
             (() => {
-                if(eventDetails.animals.length) {
-                    return this.animalsService.getRemoteAnimals(eventDetails.animals);
+                if(animals.length) {
+                    return this.animalsService.getRemoteAnimals(animals);
                 } else {
                     return [];
                 }
             })(),
         ]).then(([event, animals]) => {
+            animals = _.map(animals, animal => _.extend(animal, {organization: currentOrganization}));
+
             event.animals = Promise.resolve(animals);
 
-            return event.save();
+            return Promise.all(
+                _.map(animals, animal => animal.save())
+            ).then(() => event.save());
         }));
     }
 
@@ -174,17 +178,14 @@ export class EventController {
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
                 .innerJoinAndSelect("person_meeting.adopter", "adopter")
-                .innerJoinAndSelect("adopter.eventAttendances", "event_attendance")
-                .leftJoinAndSelect("adopter.animalMeetings", "animal_meetings", "animal_meetings.concluded_at IS NULL")
+                .innerJoinAndSelect("adopter.eventAttendances", "event_attendance", "event_attendance.event_id = person_meeting.event_id")
+                .leftJoinAndSelect("adopter.animalMeetings", "animal_meetings", "animal_meetings.event_id = person_meeting.event_id")
                 .leftJoinAndSelect("animal_meetings.animal", "animal")
                 .where("person_meeting.event_id = :eventId", {eventId})
-                .andWhere("event_attendance.event_id = :eventId", {eventId})
-                .andWhere("animal_meetings.event_id = :eventId", {eventId})
                 .andWhere("person_meeting.adoption_counselor_id = :adoptionCounselorId", {adoptionCounselorId: adoptionCounselor.id})
-                .andWhere("event_attendance.concluded_at IS NULL")
-                .andWhere("person_meeting.concluded_at IS NULL")
-                .andWhere("animal_meetings.concluded_at IS NULL")
-                .orderBy("person_meeting.created_at", "DESC")
+                .andWhere("event_attendance.concludedAt IS NULL")
+                .andWhere("person_meeting.concludedAt IS NULL")
+                .orderBy("person_meeting.createdAt", "DESC")
                 .getMany()
         );
     }

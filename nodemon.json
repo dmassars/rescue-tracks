@@ -2,5 +2,5 @@
   "watch": ["src"],
   "ext": "ts",
   "ignore": ["src/**/*.spec.ts"],
-  "exec": "node --trace-warnings --inspect ./index"
+  "exec": "node --trace-warnings --inspect=0.0.0.0:9229 ./index"
 }

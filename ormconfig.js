@@ -1,4 +1,5 @@
-let SnakeCaseNamingStrategy = require("./dist/config/naming.strategy").SnakeCaseNamingStrategy;
+require('ts-node/register');
+let SnakeCaseNamingStrategy = require("./src/config/naming.strategy").SnakeCaseNamingStrategy;
 
 let base_configs = {
    type: "postgres",

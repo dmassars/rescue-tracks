@@ -59,8 +59,9 @@ export class OrganizationController {
         }
     }
 
-    @Post(":id/add_member")
+    @Post(":id/members")
     async addMember(@Param("id") organizationId: number, @Body("email") emailAddress: string): Promise<Organization> {
-        return this.organizationService.addMember(organizationId, emailAddress).then((membership) => membership.organization);
+        return this.organizationService.addMember(organizationId, emailAddress)
+            .then((membership) => membership.organization);
     }
 }

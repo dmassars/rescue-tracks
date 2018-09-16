@@ -20,6 +20,12 @@ export class Organization extends AbstractEntity {
     @Column({unique: true})
     name: string;
 
+    @Column({nullable: true})
+    inviteCode: string;
+
+    @Column({nullable: true})
+    inviteCodeCreatedAt: Date;
+
     @ManyToOne(type => Address, {cascade: ["insert", "update"]})
     address: Promise<Address>;
 

@@ -1,9 +1,12 @@
+import * as crypto from "crypto";
+
 import { Component } from '@nestjs/common';
 
 import { Request } from "express";
 
-import * as jwt from "jsonwebtoken";
 import * as _ from "lodash";
+import * as jwt from "jsonwebtoken";
+import * as moment from "moment";
 
 import { User } from "./user.entity";
 import { Organization } from "../organization/organization.entity";
@@ -31,7 +34,7 @@ export class AuthenticationService {
         }
 
         if (currentOrganization && await user.isOwner(currentOrganization)) {
-            currentOrganization = _.omit(currentOrganization, "__owner__");
+            currentOrganization = _.omit(await this.setInviteCode(user, currentOrganization), "__owner__");
         }
 
         return new Promise<string>((resolve, reject) => {
@@ -53,29 +56,39 @@ export class AuthenticationService {
 
         if(matchedToken) {
             token = matchedToken[1];
-            return new Promise<{currentUser: User, currentOrganization: Organization}>((resolve, reject) => {
-                jwt.verify(
-                    token,
-                    "this_is_not_the_secret",
-                    (error, payload: {sub: number}) => {
-                        if(error) {
-                            reject(error);
-                        } else if(payload && payload.sub) {
-                            let currentUser = User.findOne({id: payload.sub});
-                            let orgId = _.get(payload, "data.currentOrganization.id");
-                            let currentOrganization = Promise.resolve(orgId ? Organization.findOne({id: orgId}) : undefined);
 
-                            Promise.all([currentUser, currentOrganization]).then(([currentUser, currentOrganization]) => {
-                                currentUser.currentOrganization = currentOrganization;
-                                resolve({currentUser, currentOrganization});
-                            });
-                        } else {
-                            reject("No valid token payload");
-                        }
-                    });
-            });
+            try {
+                let jwtPayload = await new Promise((resolve, reject) =>
+                    jwt.verify(token, "this_is_not_the_secret", (error, payload) => error ? reject(error) : resolve(payload))) as any;
+
+
+                let currentUser = await User.findOne({id: jwtPayload.sub});
+                let orgId = _.get(jwtPayload, "data.currentOrganization.id");
+                let currentOrganization = orgId ? await Organization.findOne({id: orgId}, {relations: ["owner"]}) : undefined;
+
+                currentUser.currentOrganization = await this.setInviteCode(currentUser, currentOrganization);
+
+                return {currentUser, currentOrganization};
+            } catch(error) {
+                throw "No valid token"
+            }
         }
 
         return Promise.reject("Invalid token");
+    }
+
+    private async setInviteCode(currentUser: User, organization: Organization): Promise<Organization> {
+        if (organization
+            && (organization as any).__owner__.id == currentUser.id
+            && (!organization.inviteCodeCreatedAt || moment(organization.inviteCodeCreatedAt).isBefore(moment().subtract(1, "day")))
+            ) {
+                debugger;
+                return _.extend(organization, {
+                    inviteCode: (crypto as any).randomBytes(3).toString("hex").toUpperCase(),
+                    inviteCodeCreatedAt: new Date(),
+                }).save();
+        }
+
+        return Promise.resolve(organization);
     }
 }

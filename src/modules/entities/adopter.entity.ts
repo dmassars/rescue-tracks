@@ -30,7 +30,7 @@ export class Adopter extends AbstractEntity {
     @Column({unique: true})
     phoneNumber: string;
 
-    @Column({default: false})
+    @Column({default: false, hidden: true})
     depPreapproved: boolean;
 
     @OneToMany(type => EventAttendance, "adopter")

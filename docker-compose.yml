@@ -2,6 +2,8 @@ version: "3.7"
 
 volumes:
   db-data:
+  frontend_modules:
+  server_modules:
   rescue_tracks_files:
     external: true
   rescue_tracks_frontend_files:
@@ -21,6 +23,7 @@ services:
       - "4200:4200"
     volumes:
       - rescue_tracks_frontend_files:/rescue_tracks:nocopy
+      - frontend_modules:/rescue_tracks/node_modules
     stop_grace_period: 10s
     networks:
       rescue_tracks:
@@ -38,6 +41,7 @@ services:
       - "9229:9229"
     volumes:
       - rescue_tracks_files:/rescue_tracks:nocopy
+      - server_modules:/rescue_tracks/node_modules
     stop_grace_period: 10s
     networks:
       rescue_tracks:

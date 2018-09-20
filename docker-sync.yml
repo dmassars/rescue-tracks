@@ -3,17 +3,30 @@ syncs:
   rescue_tracks_files:
     src: "./"
     notify_terminal: true
-    sync_host_ip: "127.0.0.1"
+    host_disk_mount_mode: "cached"
     sync_host_port: 9876
-    sync_prefer: "default"
-    sync_excludes: ["Path .git", "Path node_modules", "Name .gitignore", "Name Dockerfile", "Name Procfile", "Name docker-compose.yml", "Name docker-sync.yml", "Name README.md", "Name rescue-tracks.sublime-project"]
-    watch_excludes: ["tmp"]
+    sync_excludes_type: "Name"
+    sync_excludes:
+        - ".git"
+        - "node_modules"
+        - ".gitignore"
+        - "Dockerfile"
+        - "Procfile"
+        - "docker-compose.yml"
+        - "docker-sync.yml"
+        - "README.md"
+        - "rescue-tracks.sublime-project"
 
   rescue_tracks_frontend_files:
     src: "../rescue-tracks-frontend/"
     notify_terminal: true
-    sync_host_ip: "127.0.0.1"
+    host_disk_mount_mode: "cached"
     sync_host_port: 9877
-    sync_prefer: "default"
-    sync_excludes: ["Path .git", "Path node_modules", "Name .gitignore", "Name Dockerfile", "Name README.md", "Name rescue-tracks-frontend.sublime-project"]
-    watch_excludes: ["tmp"]
+    sync_excludes_type: "Name"
+    sync_excludes:
+        - ".git"
+        - "node_modules"
+        - ".gitignore"
+        - "Dockerfile"
+        - "README.md"
+        - "rescue-tracks-frontend.sublime-project"

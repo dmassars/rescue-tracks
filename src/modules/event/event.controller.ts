@@ -147,7 +147,7 @@ export class EventController {
 
         EventAttendance.findOne({where: {adopter, event}}).then((eventAttendance) => {
             if (!eventAttendance) {
-                let newEventAttendance = Object.assign(new EventAttendance(), {adopter, event});
+                let newEventAttendance = Object.assign(new EventAttendance(), {adopter, event, approvalStatus: (attendee as any).approvalStatus});
 
                 meetings.push(newEventAttendance);
 

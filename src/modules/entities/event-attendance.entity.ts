@@ -6,6 +6,13 @@ import { EventEntity } from "../event/event.entity";
 import { PersonMeeting } from "./person-meeting.entity";
 import { Adopter } from "./adopter.entity";
 
+export enum ApprovalStatus {
+    HAS_MEETING = "has_meeting",
+    APPROVED = "approved",
+    ONLINE_APPLICATION = "online_application",
+    WALKUP = "walkup"
+};
+
 @Entity()
 @Index(["event", "adopter"], {unique: true})
 export class EventAttendance extends AbstractEntity {
@@ -18,4 +25,7 @@ export class EventAttendance extends AbstractEntity {
 
     @Column({nullable: true})
     concludedAt: Date;
+
+    @Column()
+    approvalStatus: ApprovalStatus;
 }

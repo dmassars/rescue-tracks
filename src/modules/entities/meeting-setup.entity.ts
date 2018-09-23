@@ -7,7 +7,7 @@ import { EventEntity } from "../event/event.entity";
 import { Organization } from "../organization/organization.entity";
 
 @Entity()
-export class EventAttendance extends AbstractEntity {
+export class MeetingSetup extends AbstractEntity {
 
     @ManyToOne(type => EventEntity, {nullable: false})
     event: Promise<EventEntity>;
@@ -19,5 +19,8 @@ export class EventAttendance extends AbstractEntity {
     animal: Promise<Animal>;
 
     @Column({nullable: true})
-    meetingTime: Timestamp;
+    meetingTime: Date;
+
+    @Column({default: false})
+    started: boolean;
 }

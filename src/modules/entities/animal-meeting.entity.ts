@@ -1,10 +1,11 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, ManyToOne, JoinColumn, Index, BeforeUpdate} from "typeorm";
+import { Entity, Column, ManyToOne, OneToOne, JoinColumn, Index, BeforeUpdate} from "typeorm";
 
 import { User } from "../user/user.entity";
 import { Animal } from "./animal.entity";
 import { Adopter } from "./adopter.entity";
 import { EventEntity } from "../event/event.entity";
+import { MeetingSetup } from "./meeting-setup.entity";
 
 @Entity()
 @Index("uix_animal_meeting_on_animal_and_active", ["animal", "active"], {unique: true})
@@ -30,6 +31,10 @@ export class AnimalMeeting extends AbstractEntity {
 
     @ManyToOne(type => EventEntity, "animalMeetings", {nullable: false})
     event: Promise<EventEntity>;
+
+    @OneToOne(type => MeetingSetup, "animalMeeting")
+    @JoinColumn()
+    meetingSetup: Promise<MeetingSetup>;
 
     @BeforeUpdate()
     ensureActive() {

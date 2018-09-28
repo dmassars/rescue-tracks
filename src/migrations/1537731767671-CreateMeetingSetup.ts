@@ -8,7 +8,7 @@ export class CreateMeetingSetup1537731767671 implements MigrationInterface {
             "created_at" TIMESTAMP NOT NULL DEFAULT now(),
             "updated_at" TIMESTAMP NOT NULL DEFAULT now(),
             "meeting_time" TIMESTAMP,
-            "started" BOOLEAN DEFAULT false,
+            "started" BOOLEAN NOT NULL DEFAULT false,
             "event_id" integer NOT NULL,
             "adopter_id" integer NOT NULL,
             "animal_id" integer NOT NULL,

@@ -1,9 +1,10 @@
 import { AbstractEntity } from "../abstract-entity";
 import { Entity, Column, ManyToOne, ManyToMany, JoinColumn, OneToMany } from "typeorm";
 
-import { Organization } from "../organization/organization.entity";
-import { EventEntity } from "../event/event.entity";
 import { AnimalMeeting } from "./animal-meeting.entity";
+import { EventEntity } from "../event/event.entity";
+import { MeetingSetup } from "./meeting-setup.entity";
+import { Organization } from "../organization/organization.entity";
 
 import { ShelterLuvAnimal } from "../shelterluv/shelterluv.animal";
 
@@ -31,11 +32,14 @@ export class Animal extends AbstractEntity {
     @Column({nullable: true})
     status: string;
 
-    @ManyToMany(type => EventEntity, event => event.animals)
+    @ManyToMany(type => EventEntity, "animals")
     events: Promise<EventEntity[]>;
 
-    @OneToMany(type => AnimalMeeting, meeting => meeting.animal)
+    @OneToMany(type => AnimalMeeting, "animal")
     animalMeetings: Promise<AnimalMeeting[]>;
+
+    @OneToMany(type => MeetingSetup, "animal")
+    meetingSetups: Promise<MeetingSetup[]>;
 
     // Non-persisted fields
     selected: boolean;

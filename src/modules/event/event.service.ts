@@ -25,6 +25,8 @@ export class EventService {
     getAdoptersWaitingAtEvent(eventId: number): Promise<EventAttendance[]> {
         return EventAttendance.createQueryBuilder("event_attendance")
             .innerJoinAndSelect("event_attendance.adopter", "adopter")
+            .leftJoinAndSelect("adopter.meetingSetups", "meetingSetup", "meetingSetup.event_id = event_attendance.event_id")
+            .leftJoinAndSelect("meetingSetup.animal", "animal")
             .leftJoin("adopter.personMeetings", "person_meetings", "person_meetings.event_id = event_attendance.event_id")
             .where("event_attendance.event_id = :eventId", {eventId})
             .andWhere("event_attendance.concludedAt IS NULL")
@@ -35,6 +37,7 @@ export class EventService {
     getAnimalsAtEvent(eventId: number): Promise<Animal[]> {
         return Animal.createQueryBuilder("animals")
             .innerJoin("animals.events", "events")
+            .leftJoinAndSelect("animals.meetingSetups", "meeting_setups", "meeting_setups.event_id = events.id")
             .leftJoinAndSelect("animals.animalMeetings", "animal_meetings", "animal_meetings.active = true OR animal_meetings.adopted = true")
             .leftJoinAndSelect("animal_meetings.adoptionCounselor", "otherAdoptionCounselors")
             .leftJoinAndSelect("animal_meetings.adopter", "adopters")

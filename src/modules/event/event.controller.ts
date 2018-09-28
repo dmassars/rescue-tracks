@@ -20,7 +20,7 @@ import { EventEntity } from "./event.entity";
 import { EventPersonnel } from "./event-personnel.entity";
 import { User } from "../user/user.entity";
 import { Organization } from "../organization/organization.entity";
-import { Adopter, Animal, EventAttendance, PersonMeeting } from "../entities";
+import { Adopter, Animal, EventAttendance, PersonMeeting, MeetingSetup } from "../entities";
 
 @Controller("/events")
 export class EventController {
@@ -151,7 +151,22 @@ export class EventController {
 
                 meetings.push(newEventAttendance);
 
-                return newEventAttendance.save().then(() => event.save());
+                let thingsToSave = [newEventAttendance];
+
+                if (_.get(attendee, "meetingSetup")) {
+                    thingsToSave = _.concat(
+                        thingsToSave,
+                        Object.assign(
+                            new MeetingSetup(),
+                            _.chain(attendee)
+                             .get("meetingSetup")
+                             .extend({adopter, event})
+                             .value()
+                        )
+                    );
+                }
+
+                return Promise.all(_.map(thingsToSave, t => t.save())).then(() => event.save());
             }
         }).then(() => this.eventSocket.updateAdoptersAtEvent(eventId));
     }

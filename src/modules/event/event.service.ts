@@ -7,7 +7,6 @@ import { Animal } from "../entities/animal.entity";
 import { PersonMeeting } from "../entities/person-meeting.entity";
 import { EventAttendance } from "../entities/event-attendance.entity";
 
-
 @Component()
 export class EventService {
 

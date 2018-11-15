@@ -34,7 +34,7 @@ export class AuthenticationService {
         }
 
         if (currentOrganization && await user.isOwner(currentOrganization)) {
-            currentOrganization = _.omit(await this.setInviteCode(user, currentOrganization), "__owner__");
+            currentOrganization = _.omit(await this.setInviteCode(user, currentOrganization), ["__owner__", "__has_owner__", "inviteCodeCreatedAt"]);
         }
 
         return new Promise<string>((resolve, reject) => {

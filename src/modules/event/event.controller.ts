@@ -20,7 +20,7 @@ import { EventEntity } from "./event.entity";
 import { EventPersonnel } from "./event-personnel.entity";
 import { User } from "../user/user.entity";
 import { Organization } from "../organization/organization.entity";
-import { Adopter, Animal, EventAttendance, PersonMeeting, MeetingSetup } from "../entities";
+import { Adopter, Animal, EventAttendance, PersonMeeting, MeetingSetup, Message } from "../entities";
 
 @Controller("/events")
 export class EventController {
@@ -202,6 +202,22 @@ export class EventController {
                 .andWhere("person_meeting.concludedAt IS NULL")
                 .orderBy("person_meeting.createdAt", "DESC")
                 .getMany()
+        );
+    }
+
+    @Get(":id/messages")
+    @UseGuards(OrganizationEventGuard)
+    getEventMessages(@Param("id") eventId: number): Observable<Message[]> {
+        return Observable.fromPromise(
+            this.eventService.getEventMessages(eventId)
+        );
+    }
+    @Post(":id/messages")
+    @UseGuards(OrganizationEventGuard)
+    addMessageToEvent(@Param("id") eventId: number, @Body("currentUser") sender: User, @Body("message") message: String): Observable<void> {
+        return Observable.fromPromise(
+            (new Message({event: {id: eventId}, sender, message})).save()
+                .then(() => this.eventSocket.updateMessagesAtEvent(eventId))
         );
     }
 }

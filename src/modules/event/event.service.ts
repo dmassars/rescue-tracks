@@ -4,6 +4,7 @@ import * as _ from "lodash";
 
 import { Adopter } from "../entities/adopter.entity";
 import { Animal } from "../entities/animal.entity";
+import { Message } from "../entities/message.entity";
 import { PersonMeeting } from "../entities/person-meeting.entity";
 import { EventAttendance } from "../entities/event-attendance.entity";
 
@@ -42,6 +43,14 @@ export class EventService {
             .leftJoinAndSelect("animal_meetings.adopter", "adopters")
             .orderBy("animals.name", "ASC")
             .where("events.id = :eventId", {eventId})
+            .getMany();
+    }
+
+    getEventMessages(eventId: number): Promise<Message[]> {
+        return Message.createQueryBuilder("messages")
+            .innerJoinAndSelect("messages.sender", "sender")
+            .orderBy("messages.createdAt", "ASC")
+            .where("messages.event_id = :eventId", {eventId})
             .getMany();
     }
 }

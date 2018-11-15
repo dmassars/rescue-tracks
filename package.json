@@ -9,9 +9,9 @@
     "start:watch": "nodemon",
     "prestart:prod": "tsc",
     "start:prod": "node dist/server.js",
-    "migrate": "tsc && typeorm migration:run",
-    "migration:generate": "tsc && typeorm migration:generate",
-    "migration:create": "tsc && typeorm migration:create"
+    "migrate": "tsc && MIGRATE=true typeorm migration:run",
+    "migration:generate": "tsc && MIGRATE=true typeorm migration:generate",
+    "migration:create": "tsc && MIGRATE=true typeorm migration:create"
   },
   "dependencies": {
     "@nestjs/common": "^4.6.6",

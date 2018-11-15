@@ -10,6 +10,7 @@ import { AbstractSocket } from "../abstract-socket";
 import { EventService } from "./event.service";
 import { Adopter } from "../entities/adopter.entity";
 import { Animal } from "../entities/animal.entity";
+import { Message } from "../entities/message.entity";
 
 @WebSocketGateway({namespace: "event"})
 export class EventSocket extends AbstractSocket implements OnGatewayInit {
@@ -29,5 +30,9 @@ export class EventSocket extends AbstractSocket implements OnGatewayInit {
 
     updateAnimalsAtEvent(eventId: number): void {
         this.autoUpdater<Animal[]>(eventId, "animals", "getAnimalsAtEvent");
+    }
+
+    updateMessagesAtEvent(eventId: number): void {
+        this.autoUpdater<Message[]>(eventId, "messages", "getsEventMessages");
     }
 }

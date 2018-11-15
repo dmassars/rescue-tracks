@@ -4,4 +4,5 @@ export * from "./animal-meeting.entity";
 export * from "./animal.entity";
 export * from "./event-attendance.entity";
 export * from "./meeting-setup.entity";
+export * from "./message.entity";
 export * from "./person-meeting.entity";

@@ -1,5 +1,5 @@
 import { AbstractEntity } from "../abstract-entity";
-import { Entity, Column, ManyToOne, OneToOne, JoinColumn, Index, BeforeUpdate} from "typeorm";
+import { Entity, Column, ManyToOne, OneToOne, JoinColumn, Index, BeforeUpdate } from "typeorm";
 
 import { User } from "../user/user.entity";
 import { Animal } from "./animal.entity";

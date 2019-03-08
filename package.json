@@ -10,6 +10,7 @@
     "prestart:prod": "tsc",
     "start:prod": "node dist/server.js",
     "migrate": "tsc && MIGRATE=true typeorm migration:run",
+    "migrate:rollback": "tsc && MIGRATE=true typeorm migration:revert",
     "migration:generate": "tsc && MIGRATE=true typeorm migration:generate",
     "migration:create": "tsc && MIGRATE=true typeorm migration:create"
   },

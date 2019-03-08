@@ -13,19 +13,36 @@ export class AnimalsService {
     public async getRemoteAnimals(ids: number[] = []): Promise<Animal[]> {
         let request: Promise<ShelterLuvAnimal[]>;
 
-        if(ids.length) {
-            request = this.shelterLuvApiService.getAnimalsByIds(ids);
+        let shelterLuvIds = _.reject(ids, (id) => _.startsWith(id, "placeholder"));
+
+        if(shelterLuvIds.length) {
+            request = this.shelterLuvApiService.getAnimalsByIds(shelterLuvIds);
         } else {
             request = this.shelterLuvApiService.visibleAnimals();
         }
 
         let animals: ShelterLuvAnimal[] = await request;
 
+        let placeholders: Animal[] = _.chain(1)
+                                      .range(5)
+                                      .map((i) => new Animal({
+                                           species: "dog",
+                                           breed: "unknown",
+                                           name: ` Placeholder ${i}`,
+                                           externalId: `placeholder ${i}`,
+                                           photoURL: '/favicon.ico'
+                                       })).filter((a) => {
+                                          if (_.find(ids, (id) => _.startsWith(id, "placeholder"))) {
+                                             return _.find(ids, (id) => id == a.externalId);
+                                          } else {
+                                              return true;
+                                          }
+                                       }).value()
+
         return Promise.all<Animal>(
-            _.map(
-                animals,
-                (animal: ShelterLuvAnimal) => Animal.fromShelterLuvAnimal(animal)
-            )
+            _.chain(animals)
+             .map((animal: ShelterLuvAnimal) => Animal.fromShelterLuvAnimal(animal))
+             .concat(placeholders).value()
         );
     }
 }

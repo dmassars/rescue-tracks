@@ -153,7 +153,7 @@ export class EventController {
 
                 let thingsToSave = [newEventAttendance];
 
-                if (_.get(attendee, "meetingSetup.animal.id")) {
+                if (_.get(attendee, "meetingSetup.animal.name") || _.get(attendee, "meetingSetup.meetingTime")) {
                     thingsToSave = _.concat(
                         thingsToSave,
                         Object.assign(

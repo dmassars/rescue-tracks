@@ -43,6 +43,7 @@ export class ShelterLuvAPIService {
                         .value()
             },
             data: animal,
+            externalId: animal['Internal-ID']
         }
 
     }
@@ -59,6 +60,11 @@ export class ShelterLuvAPIService {
                     )
                 ).sortBy("name")
                 .value();
+    }
+
+    public async queryShelterLuv(path){
+        let response = await this.get(path);
+        return response.body
     }
 
     public async getAnimalsByIds(ids: number[]): Promise<ShelterLuvAnimal[]> {

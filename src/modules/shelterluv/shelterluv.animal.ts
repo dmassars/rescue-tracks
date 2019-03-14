@@ -24,4 +24,5 @@ export class ShelterLuvAnimal {
     readonly photo:       string;
     readonly size:        string;
     readonly status:      string;
+    readonly externalId:  string;
 }

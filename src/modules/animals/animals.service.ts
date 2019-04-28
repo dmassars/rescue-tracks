@@ -9,8 +9,6 @@ import { emit } from 'cluster';
 
 import { In } from "typeorm";
 
-import { diff, addedDiff, deletedDiff, updatedDiff, detailedDiff } from 'deep-object-diff';
-
 const DROP_TEXT = _.replace(`This dog is available for adoption through Muddy Paws Rescue.
 If you're interested in adopting, the first thing you should do is fill out an adoption application at www.muddypawsrescue.org.
 We will be in touch with you within 7 days of receiving your application!`, /\s+/g, " ");
@@ -153,7 +151,7 @@ export class AnimalsService {
         return await request
     }
 
-    
+
 
 
     /*

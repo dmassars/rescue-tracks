@@ -63,7 +63,7 @@ export class EventController {
             EventEntity.findOne({id: eventId}),
             (() => {
                 if(animals.length) {
-                    return this.animalsService.getRemoteAnimals(animals);
+                    return this.animalsService.getAnimals({},animals);
                 } else {
                     return [];
                 }
@@ -94,23 +94,27 @@ export class EventController {
     @UseGuards(OrganizationEventGuard)
     async getAnimalsForEvent(@Param("id") eventId: number, @Query("all") getAll: boolean): Promise<Animal[]> {
         getAll = !!getAll;
+
+        /*
         let event: EventEntity = await EventEntity.findOne({id: eventId});
 
         let selectedAnimals: Animal[] = await event.animals;
+        selectedAnimals = _.map(selectedAnimals,(animal: Animal) => _.merge(animal, {selected: true}))
 
         if(moment(event.endTime).isBefore(moment()) || !getAll) {
             return _.map(selectedAnimals, (animal: Animal) =>
                         _.merge(animal, {selected: true})
                     );
         }
+        */
 
-        let allAnimals: Animal[] = await this.animalsService.getRemoteAnimals();
+        let allAnimals: Animal[] = await this.animalsService.getAnimals({eventId});
+        allAnimals.forEach((e)=>{
+            //@ts-ignore
+            if (e.__events__.length) e.selected = true;
+        })
+        return allAnimals;
 
-        return _.chain(selectedAnimals)
-                .map((animal: Animal) => _.merge(animal, {selected: true}))
-                .unionBy(allAnimals, (animal: Animal) => animal.externalId)
-                .sortBy((animal: Animal) => animal.name)
-                .value();
     }
 
     @Get(":id/animals-for-meeting")
@@ -189,7 +193,7 @@ export class EventController {
 
     @Get(":id/meetings")
     @UseGuards(OrganizationEventGuard)
-    getMeetingsAtEvent(@Param("id") eventId: number, @Body("currentUser") adoptionCounselor: User): Observable<PersonMeeting[]> {
+    getMeetingsAtEvent(@Param("id") eventId: number, @Body("currentUser") adoptionCounselor: User): Observable<PersonMeeting[]> {        
         return Observable.fromPromise(
             PersonMeeting.createQueryBuilder("person_meeting")
                 .innerJoinAndSelect("person_meeting.adopter", "adopter")
